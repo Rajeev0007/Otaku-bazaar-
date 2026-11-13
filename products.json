@@ -1,0 +1,61 @@
+{
+ "shipping": 49,
+ "products": [
+  {
+   "id": 1,
+   "name": "Anime Eye Keychain",
+   "cat": "Keychains",
+   "price": 199,
+   "c": "#3a1418",
+   "desc": "Add a short description of this product here.",
+   "imgs": []
+  },
+  {
+   "id": 2,
+   "name": "Sakura Phone Charm",
+   "cat": "Charms",
+   "price": 249,
+   "c": "#2a1a30",
+   "desc": "Add a short description of this product here.",
+   "imgs": []
+  },
+  {
+   "id": 3,
+   "name": "Chibi Enamel Pin Set",
+   "cat": "Pins",
+   "price": 349,
+   "c": "#14282a",
+   "desc": "Add a short description of this product here.",
+   "imgs": []
+  },
+  {
+   "id": 4,
+   "name": "Cursed Spirit Bracelet",
+   "cat": "Jewellery",
+   "price": 299,
+   "c": "#33260f",
+   "desc": "Add a short description of this product here.",
+   "imgs": []
+  },
+  {
+   "id": 5,
+   "name": "Kawaii Tote Bag",
+   "cat": "Bags",
+   "price": 549,
+   "c": "#18223a",
+   "desc": "Add a short description of this product here.",
+   "imgs": []
+  },
+  {
+   "id": 6,
+   "name": "Ninja Headband",
+   "cat": "Cosplay",
+   "price": 279,
+   "c": "#341a1a",
+   "desc": "Add a short description of this product here.",
+   "imgs": []
+  }
+ ],
+ "freeShippingOver": 999,
+ "banner": "Free shipping over ₹999"
+}
