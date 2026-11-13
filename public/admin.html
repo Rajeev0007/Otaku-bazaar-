@@ -1,0 +1,33 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Orders – The Otaku Bazaar</title>
+<link rel="icon" href="/favicon.ico" sizes="any"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<style>
+body{font-family:system-ui,sans-serif;margin:0;padding:16px;background:#fff7f2;color:#1d1a3a}
+@media (prefers-color-scheme:dark){body{background:#14122b;color:#f6f0ff}}
+.o{border:2px solid currentColor;border-radius:14px;padding:12px;margin:12px 0;max-width:700px}
+input,select,button{font:inherit;padding:8px;border-radius:10px;border:2px solid currentColor;background:transparent;color:inherit}
+button{cursor:pointer;font-weight:600}
+</style></head><body>
+<h1 style="display:flex;align-items:center;gap:10px"><img src="/img/logo.png" width="40" height="40" alt="" style="border-radius:50%">Orders</h1>
+<p><a href="/" style="color:inherit">&larr; Back to shop</a></p>
+<div><input id="k" type="password" placeholder="Admin key"> <button id="go">Load orders</button></div>
+<div id="out"></div>
+<script>
+const S=["Order placed","Packed","Shipped","Delivered"],$=s=>document.querySelector(s);
+const esc=t=>String(t).replace(/[&<>"']/g,c=>"&#"+c.charCodeAt(0)+";");
+let key="";try{key=sessionStorage.getItem("ak")||""}catch{}
+$("#k").value=key;
+async function load(){
+  key=$("#k").value;try{sessionStorage.setItem("ak",key)}catch{}
+  const r=await fetch("/api/admin/orders",{headers:{"x-admin-key":key}});
+  if(!r.ok){$("#out").textContent=(await r.json()).error;return}
+  const L=await r.json();
+  $("#out").innerHTML=L.length?L.map(o=>`<div class="o"><b>${esc(o.id)}</b> · ₹${o.total} · paid<br>${esc(o.customer.name)} · ${esc(o.customer.phone)} · ${esc(o.customer.email)}<br>${esc(o.customer.addr)}<br><small>${o.lines.map(l=>esc(l.name)+" × "+l.qty).join(", ")}</small><br><br>
+  <select id="s${o.id}">${S.map((s,i)=>`<option value="${i}" ${i==o.stage?"selected":""}>${s}</option>`).join("")}</select>
+  <input id="t${o.id}" placeholder="Tracking number" value="${esc(o.tracking)}"> <button data-id="${o.id}">Save</button></div>`).join(""):"No paid orders yet.";
+}
+$("#go").onclick=load;
+$("#out").onclick=async e=>{const id=e.target.dataset.id;if(!id)return;
+  const r=await fetch("/api/admin/orders/"+id,{method:"POST",headers:{"x-admin-key":key,"Content-Type":"application/json"},body:JSON.stringify({stage:$("#s"+id).value,tracking:$("#t"+id).value})});
+  e.target.textContent=r.ok?"Saved":"Failed"};
+if(key)load();
+</script></body></html>

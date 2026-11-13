@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Otaku Bazaar | Anime aesthetic accessories</title>
+<meta name="theme-color" content="#0d0d10">
+<link rel="icon" href="/favicon.ico" sizes="any"><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png"><link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png"><link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="description" content="Anime aesthetic accessories: keychains, pins, charms, bags and more. Shipped across India.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--bg:#0d0d10;--ink:#f3efec;--card:#17171c;--line:#2c2c34;--mut:#a7a3ad;--red:#e5252a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 1rem/1.5 Archivo,system-ui,sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+.strip{background:var(--red);color:#fff;text-align:center;font-size:.85rem;padding:6px 12px}
+.top{display:flex;align-items:center;gap:14px;padding:12px 5vw;position:sticky;top:0;background:var(--bg);z-index:5;border-bottom:1px solid var(--line)}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.15rem;margin-right:auto;text-decoration:none;color:inherit}
+.logo img{width:44px;height:44px;border-radius:50%;display:block}
+.top a.l{color:inherit;font-weight:600}
+.btn{background:var(--ink);color:var(--bg);border:0;border-radius:6px;padding:9px 16px;font-weight:600}
+.btn.red{background:var(--red);color:#fff}.btn.out{background:none;color:var(--ink);border:1.5px solid var(--ink)}
+.btn:disabled{opacity:.55;cursor:wait}
+main,footer{max-width:1100px;margin:auto;padding:0 5vw}
+.hero{margin-top:14px}.hero img{display:block;width:100%;height:auto;aspect-ratio:3/1;object-fit:cover;border-radius:10px}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.intro{padding:14px 0 4px}.intro p{margin:0;color:var(--mut);max-width:60ch}
+@media (max-width:600px){.hero img{aspect-ratio:16/9}}
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 10px}
+input,select,textarea{padding:10px 12px;border:1.5px solid var(--line);border-radius:6px;background:var(--card);width:100%}
+.tools input{flex:1;min-width:180px;width:auto}.tools select{width:auto}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.chip{border:1.5px solid var(--line);background:var(--card);padding:5px 12px;border-radius:999px;font-size:.9rem}
+.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:16px;padding-bottom:40px}
+.card{background:var(--card);border-radius:8px;overflow:hidden;display:flex;flex-direction:column;border:1px solid var(--line)}
+.tile{aspect-ratio:4/5;background:var(--c);display:grid;place-items:center;position:relative;cursor:pointer;overflow:hidden}
+.tile b{font-size:5.5rem;font-weight:800;color:#fff;opacity:.18}.tile img{width:100%;height:100%;object-fit:cover;display:block}
+.heart{position:absolute;top:8px;right:8px;width:34px;height:34px;border-radius:50%;border:0;background:#fff;color:#e2382d;font-size:1.1rem}
+.info{padding:10px 12px 12px;display:flex;flex-direction:column;gap:2px;flex:1}
+.info h3{margin:0;font-size:1rem;font-weight:600;cursor:pointer}.info small{color:var(--mut)}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:auto;padding-top:8px}
+.price{font-weight:800;font-size:1.1rem}
+.empty{grid-column:1/-1;color:var(--mut)}
+#track{scroll-margin-top:80px;padding:20px 0 50px;border-top:1px solid var(--line)}#track h2{margin:0 0 10px}
+.trow{display:flex;gap:8px;flex-wrap:wrap}.trow input{flex:1;min-width:170px;width:auto}
+.steps{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.step{flex:1;min-width:90px;padding:9px;border:1.5px solid var(--line);border-radius:6px;text-align:center;color:var(--mut);font-size:.9rem}
+.step.done{border-color:#1f9d7a;color:var(--ink);background:rgba(31,157,122,.15);font-weight:600}
+footer{padding-bottom:30px;color:var(--mut);font-size:.9rem}footer a{color:inherit}
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.45);opacity:0;pointer-events:none;transition:opacity .2s;z-index:9}
+.scrim.on{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(420px,100%);background:var(--bg);border-left:1px solid var(--line);transform:translateX(100%);visibility:hidden;transition:transform .25s,visibility 0s .25s;z-index:10;display:flex;flex-direction:column;padding:16px;padding-bottom:max(16px,env(safe-area-inset-bottom))}
+.drawer.open{transform:none;visibility:visible;transition:transform .25s}
+.dh{display:flex;justify-content:space-between;align-items:center}.dh h2{margin:0}
+.list{flex:1;overflow:auto;margin:10px 0}
+.item{display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.thumb{width:48px;height:60px;background:var(--c);border-radius:4px;overflow:hidden;flex:none}.thumb img{width:100%;height:100%;object-fit:cover}
+.item .t{flex:1;min-width:0}.q{display:flex;align-items:center;gap:8px}
+.q button{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--ink);background:none}
+.sum{padding:8px 0}.sum small{color:var(--mut);display:block}
+form.co{display:grid;gap:8px}
+.msg{margin-top:10px;padding:10px 12px;border-radius:6px;background:rgba(31,157,122,.18);font-weight:600}.msg.bad{background:rgba(226,56,45,.18)}
+dialog{width:min(560px,94vw);max-height:90vh;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);padding:16px}
+dialog::backdrop{background:rgba(0,0,0,.5)}dialog .tile{cursor:default;border-radius:8px;margin-top:10px;aspect-ratio:1}
+.th{display:flex;gap:6px;margin-top:6px}.th img{width:56px;height:56px;object-fit:cover;border-radius:4px;cursor:pointer}
+@media (prefers-reduced-motion:reduce){.drawer,.scrim{transition:none}}
+</style>
+</head>
+<body>
+<div class="strip" id="banner" hidden></div>
+<header class="top">
+  <a class="logo" href="/"><img src="/img/logo.png" width="44" height="44" alt="">The Otaku Bazaar</a>
+  <a class="l" href="#track">Track order</a>
+  <button class="btn red" id="openCart">Cart (<span id="count">0</span>)</button>
+</header>
+<main>
+  <div class="hero"><img src="/img/banner.jpg" width="1600" height="533" alt="The Otaku Bazaar, anime accessories store: apparel, keychains, figures, posters, stickers and more" fetchpriority="high"></div>
+  <div class="intro"><h1 class="vh">The Otaku Bazaar: anime accessories</h1><p>Keychains, pins, charms and more from our Instagram shop. Pay by UPI, card or netbanking.</p></div>
+  <div class="tools">
+    <input id="q" type="search" placeholder="Search accessories" aria-label="Search accessories">
+    <select id="sort" aria-label="Sort"><option value="">Featured</option><option value="lo">Price: low to high</option><option value="hi">Price: high to low</option></select>
+  </div>
+  <div class="chips" id="cats"></div>
+  <div class="grid" id="grid"><p class="empty">Loading products…</p></div>
+</main>
+<footer>
+  <section id="track">
+    <h2>Track your order</h2>
+    <div class="trow"><input id="tid" placeholder="Order ID (OB-12345)" aria-label="Order ID" autocomplete="off"><input id="tph" placeholder="Phone number used at checkout" aria-label="Phone number" inputmode="tel" autocomplete="tel"><button class="btn" id="tbtn">Check status</button></div>
+    <div id="tres" aria-live="polite"></div>
+  </section>
+  <p>Follow us on <a href="https://www.instagram.com/theotakubazaar" target="_blank" rel="noopener">Instagram @theotakubazaar</a></p>
+</footer>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-label="Shopping cart">
+  <div class="dh"><h2>Your cart</h2><button class="btn out" id="closeCart">Close</button></div>
+  <div class="list" id="list"></div>
+  <div class="sum"><div class="row" style="padding:0"><b>Total</b><span class="price" id="total">₹0</span></div><small id="qt"></small></div>
+  <div class="row" style="gap:8px;padding:0 0 8px"><input id="cp" placeholder="Coupon code" aria-label="Coupon code" autocapitalize="characters"><button class="btn out" id="cpb" type="button">Apply</button></div>
+  <form class="co" id="co">
+    <input name="name" placeholder="Full name" required maxlength="80" autocomplete="name">
+    <input name="phone" type="tel" placeholder="Phone number (10 digits)" required pattern="[0-9 +]{10,16}" title="10-digit mobile number" autocomplete="tel">
+    <input name="email" type="email" placeholder="Email" required autocomplete="email">
+    <textarea name="addr" rows="3" placeholder="Full delivery address with pincode" required minlength="10" maxlength="400" autocomplete="street-address"></textarea>
+    <button class="btn red" type="submit" id="pay">Pay now</button>
+  </form>
+  <div id="note" aria-live="polite"></div>
+</aside>
+<dialog id="pd"></dialog>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js" async></script>
+<script>
+"use strict";
+const $=s=>document.querySelector(s),inr=n=>"₹"+Number(n).toLocaleString("en-IN");
+const esc=t=>String(t).replace(/[&<>"']/g,c=>"&#"+c.charCodeAt(0)+";");
+const store={get(k,d){try{const v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch{return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
+const STAGES=["Order placed","Packed","Shipped","Delivered"];
+let PRODUCTS=[],cart=store.get("ob_cart",{}),wish=store.get("ob_wish",[]),cat="All",code="",qseq=0,busy=false;
+if(typeof cart!=="object"||Array.isArray(cart))cart={};
+if(!Array.isArray(wish))wish=[];
+
+async function api(path,body){
+  const r=await fetch(path,body===undefined?undefined:{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+  const d=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error(d.error||"Something went wrong. Please try again.");
+  return d;
+}
+function note(t,bad){const d=document.createElement("div");d.className="msg"+(bad?" bad":"");d.textContent=t;$("#note").replaceChildren(d)}
+const pic=p=>p.imgs&&p.imgs[0]?`<img src="${esc(p.imgs[0])}" alt="${esc(p.name)}">`:`<b aria-hidden="true">${esc(p.name[0])}</b>`;
+
+function renderShop(){
+  const cats=["All","♥ Saved",...new Set(PRODUCTS.map(p=>p.cat))];
+  $("#cats").innerHTML=cats.map(c=>`<button class="chip ${c===cat?"on":""}" data-c="${esc(c)}">${esc(c)}</button>`).join("");
+  const q=$("#q").value.trim().toLowerCase(),so=$("#sort").value;
+  const L=PRODUCTS.filter(p=>(cat==="All"||(cat==="♥ Saved"?wish.includes(p.id):p.cat===cat))&&(p.name+" "+p.cat).toLowerCase().includes(q));
+  if(so==="lo")L.sort((a,b)=>a.price-b.price);if(so==="hi")L.sort((a,b)=>b.price-a.price);
+  $("#grid").innerHTML=L.map(p=>`<div class="card"><div class="tile" style="--c:${esc(p.c||"#ddd")}" data-open="${p.id}">${pic(p)}<button class="heart" data-w="${p.id}" aria-label="${wish.includes(p.id)?"Remove from":"Save to"} wishlist">${wish.includes(p.id)?"♥":"♡"}</button></div>
+  <div class="info"><h3 data-open="${p.id}">${esc(p.name)}</h3><small>${esc(p.cat)}</small><div class="row"><span class="price">${inr(p.price)}</span><button class="btn" data-add="${p.id}">Add to cart</button></div></div></div>`).join("")||`<p class="empty">${cat==="♥ Saved"?"Nothing saved yet. Tap the heart on a product.":"No products match your search."}</p>`;
+}
+function renderCart(){
+  const ids=Object.keys(cart).filter(id=>PRODUCTS.some(p=>p.id==id));
+  $("#count").textContent=ids.reduce((n,id)=>n+cart[id],0);
+  $("#list").innerHTML=ids.length?ids.map(id=>{const p=PRODUCTS.find(x=>x.id==id);return `<div class="item"><div class="thumb" style="--c:${esc(p.c||"#ddd")}">${p.imgs&&p.imgs[0]?`<img src="${esc(p.imgs[0])}" alt="">`:""}</div><div class="t"><b>${esc(p.name)}</b><br><small>${inr(p.price)}</small></div><div class="q"><button data-d="${id}" aria-label="Fewer">−</button><span>${cart[id]}</span><button data-i="${id}" aria-label="More">+</button></div></div>`}).join(""):"<p>Your cart is empty.</p>";
+  store.set("ob_cart",cart);quote();
+}
+async function quote(){
+  const n=++qseq,items=Object.entries(cart).map(([id,qty])=>({id:+id,qty}));
+  if(!items.length){$("#total").textContent="₹0";$("#qt").textContent="";return}
+  try{
+    const q=await api("/api/quote",{items,coupon:code});
+    if(n!==qseq)return;
+    if(q.couponError){code="";$("#qt").textContent=q.couponError}
+    else $("#qt").textContent=`Items ${inr(q.sub)}${q.discount?" · Coupon −"+inr(q.discount):""} · Shipping ${q.shipping?inr(q.shipping):"free"}${q.hint?" · "+q.hint:""}`;
+    $("#total").textContent=inr(q.total);
+  }catch(x){if(n===qseq)$("#qt").textContent=x.message}
+}
+function setDrawer(on){$("#drawer").classList.toggle("open",on);$("#scrim").classList.toggle("on",on)}
+function addToCart(id){cart[id]=Math.min((cart[id]||0)+1,20);renderCart();setDrawer(true)}
+
+async function openP(id){
+  const p=PRODUCTS.find(x=>x.id==id);if(!p)return;
+  const rv=await api("/api/reviews/"+id).catch(()=>({list:[],avg:0})),im=p.imgs||[];
+  $("#pd").innerHTML=`<button class="btn out" id="pdx">Close</button>
+  <div class="tile" style="--c:${esc(p.c||"#ddd")}">${pic(p).replace('<img ','<img id="big" ')}</div>
+  <div class="th">${im.map(u=>`<img src="${esc(u)}" data-th="${esc(u)}" alt="">`).join("")}</div>
+  <h2>${esc(p.name)}</h2><p>${esc(p.desc||"")}</p>
+  <div class="row"><span class="price">${inr(p.price)}</span><button class="btn red" data-add="${p.id}">Add to cart</button></div>
+  <h3>Reviews${rv.list.length?` · ${rv.avg}/5 (${rv.list.length})`:""}</h3>
+  ${rv.list.map(r=>`<p><b>${"★".repeat(r.rating)}</b> ${esc(r.name)}<br>${esc(r.text)}</p>`).join("")||"<p>No reviews yet.</p>"}
+  <form id="rf" class="co" data-p="${p.id}"><b>Bought this? Leave a review</b>
+  <input name="orderId" placeholder="Order ID" required><input name="phone" placeholder="Phone used at checkout" required>
+  <select name="rating" aria-label="Rating"><option value="5">5 stars</option><option value="4">4 stars</option><option value="3">3 stars</option><option value="2">2 stars</option><option value="1">1 star</option></select>
+  <input name="text" placeholder="Your review" required maxlength="300"><button class="btn" type="submit">Post review</button><div id="rm" aria-live="polite"></div></form>`;
+  if(!$("#pd").open)$("#pd").showModal();
+}
+
+document.addEventListener("click",e=>{
+  const t=e.target,o=t.closest("[data-open]"),w=t.closest("[data-w]");
+  if(w){const id=+w.dataset.w;wish=wish.includes(id)?wish.filter(x=>x!==id):[...wish,id];store.set("ob_wish",wish);renderShop();return}
+  if(o){openP(o.dataset.open);return}
+  if(t.dataset.c){cat=t.dataset.c;renderShop()}
+  if(t.dataset.add){if($("#pd").open)$("#pd").close();addToCart(t.dataset.add)}
+  if(t.dataset.i){cart[t.dataset.i]=Math.min(cart[t.dataset.i]+1,20);renderCart()}
+  if(t.dataset.d){if(--cart[t.dataset.d]<=0)delete cart[t.dataset.d];renderCart()}
+  if(t.id==="pdx")$("#pd").close();
+  if(t.dataset.th)$("#big").src=t.dataset.th;
+});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")setDrawer(false)});
+$("#openCart").onclick=()=>setDrawer(true);$("#closeCart").onclick=$("#scrim").onclick=()=>setDrawer(false);
+$("#q").oninput=renderShop;$("#sort").onchange=renderShop;
+$("#cpb").onclick=()=>{code=$("#cp").value.trim();quote()};
+
+document.addEventListener("submit",async e=>{
+  if(e.target.id!=="rf")return;
+  e.preventDefault();
+  const v=Object.fromEntries(new FormData(e.target));
+  try{await api("/api/reviews",{...v,productId:+e.target.dataset.p,rating:+v.rating});openP(e.target.dataset.p)}
+  catch(x){$("#rm").textContent=x.message}
+});
+
+$("#co").addEventListener("submit",async e=>{
+  e.preventDefault();
+  if(busy)return;
+  if(!Object.keys(cart).length){note("Your cart is empty.",1);return}
+  if(typeof Razorpay==="undefined"){note("The payment window didn't load. Check your connection and refresh the page.",1);return}
+  const form=e.target,f=Object.fromEntries(new FormData(form)),btn=$("#pay");
+  const free=()=>{busy=false;btn.disabled=false;btn.textContent="Pay now"};
+  busy=true;btn.disabled=true;btn.textContent="Starting payment…";$("#note").replaceChildren();
+  try{
+    const o=await api("/api/order",{customer:f,coupon:code,items:Object.entries(cart).map(([id,qty])=>({id:+id,qty}))});
+    const rz=new Razorpay({
+      key:o.key,amount:o.amount,currency:"INR",order_id:o.rzpOrderId,name:"The Otaku Bazaar",description:"Order "+o.orderId,
+      prefill:{name:f.name,email:f.email,contact:f.phone},theme:{color:"#e5252a"},
+      handler:async r=>{
+        try{
+          await api("/api/verify",{orderId:o.orderId,...r});
+          cart={};code="";$("#cp").value="";form.reset();renderCart();
+          $("#tid").value=o.orderId;$("#tph").value=f.phone;store.set("ob_last",{id:o.orderId,phone:f.phone});
+          note(`Payment received. Your order ID is ${o.orderId}. We've emailed the details and filled it into the tracking box.`);
+        }catch(x){note(`We got your payment but couldn't confirm it yet. Keep your order ID ${o.orderId} and message us on Instagram if this stays unconfirmed.`,1)}
+        free();
+      },
+      modal:{ondismiss:free}
+    });
+    rz.on("payment.failed",r=>note("Payment failed: "+((r.error&&r.error.description)||"please try again"),1));
+    rz.open();
+  }catch(x){note(x.message,1);free()}
+});
+
+$("#tbtn").onclick=async()=>{
+  const id=$("#tid").value.trim(),ph=$("#tph").value.trim();
+  if(!id||!ph){$("#tres").textContent="Enter your order ID and phone number.";return}
+  try{
+    const o=await api("/api/track/"+encodeURIComponent(id)+"?phone="+encodeURIComponent(ph));
+    $("#tres").innerHTML=`<p><b>${esc(o.id)}</b> · ${inr(o.total)}${o.tracking?" · Tracking no. "+esc(o.tracking):""}</p><div class="steps">${STAGES.map((s,i)=>`<div class="step ${i<=o.stage?"done":""}">${s}</div>`).join("")}</div>`;
+  }catch(x){$("#tres").textContent=x.message}
+};
+
+api("/api/products").then(d=>{
+  PRODUCTS=d.products;
+  if(d.banner){$("#banner").textContent=d.banner;$("#banner").hidden=false}
+  for(const id of Object.keys(cart))if(!PRODUCTS.some(p=>p.id==id)||!Number.isInteger(cart[id])||cart[id]<1||cart[id]>20)delete cart[id];
+  const last=store.get("ob_last",null);if(last){$("#tid").value=last.id||"";$("#tph").value=last.phone||""}
+  renderShop();renderCart();
+}).catch(()=>{$("#grid").innerHTML='<p class="empty">We couldn\'t load the shop. Please refresh the page.</p>'});
+</script>
+</body>
+</html>
