@@ -1,1 +1,1 @@
-{"name":"otaku-bazaar","version":"3.0.0","private":true,"engines":{"node":"20.x"},"scripts":{"start":"node server.js","test":"node test.js"},"dependencies":{"nodemailer":"^6.9.14"}}
+{"name":"otaku-bazaar","version":"3.0.0","private":true,"engines":{"node":"24.x"},"scripts":{"start":"node server.js","test":"node test.js"},"dependencies":{"nodemailer":"^10.0.0"}}
