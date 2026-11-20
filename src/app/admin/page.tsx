@@ -4,6 +4,7 @@ import { db } from "@/server/db";
 import { lowStockVariants } from "@/server/inventory/service";
 import { formatMoney } from "@/lib/money";
 import { Card, PageHeader, Stat, Table } from "@/components/admin/ui";
+import { getSetupStatus } from "@/server/admin/setup-status";
 
 export default async function AdminDashboard() {
   await requireStaff("dashboard.view", "/admin");
@@ -24,10 +25,30 @@ export default async function AdminDashboard() {
     db.cart.count({ where: { status: "ACTIVE", items: { some: {} } } }),
   ]);
   const aov = revenue._count ? Math.round((revenue._sum.grandTotal ?? 0) / revenue._count) : 0;
+  const setup = await getSetupStatus();
+  const pending = setup.filter((i) => !i.ok && i.required);
 
   return (
     <>
       <PageHeader title="Dashboard" description="Last 30 days unless noted." />
+      {pending.length > 0 && (
+        <details className="mb-6 rounded-2xl border border-warning/30 bg-warning/5 p-5" open={pending.length > 3}>
+          <summary className="cursor-pointer font-semibold">
+            Launch setup: {setup.filter((i) => i.ok).length} of {setup.length} done <span className="text-sm font-normal text-warning">· {pending.length} required item{pending.length === 1 ? "" : "s"} left</span>
+          </summary>
+          <ul className="mt-4 grid gap-2 sm:grid-cols-2">
+            {setup.map((i) => (
+              <li key={i.label} className="flex items-start gap-2.5 text-sm">
+                <span className={`mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full text-[0.65rem] font-bold ${i.ok ? "bg-success/20 text-success" : i.required ? "bg-warning/20 text-warning" : "bg-surface-3 text-muted"}`}>{i.ok ? "✓" : i.required ? "!" : "–"}</span>
+                <span>
+                  <span className={i.ok ? "text-muted" : "font-medium"}>{i.label}</span>
+                  {!i.ok && (i.href ? <Link href={i.href} className="block text-xs text-muted underline-offset-2 hover:text-fg hover:underline">{i.fix}</Link> : <span className="block text-xs text-muted">{i.fix}</span>)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat label="Revenue (30d)" value={formatMoney(revenue._sum.grandTotal ?? 0, "INR")} hint={orderCount ? `${revenue._count} paid orders` : "Orders begin when checkout launches"} />
         <Stat label="Avg. order value" value={formatMoney(aov, "INR")} hint="Paid orders, 30 days" />

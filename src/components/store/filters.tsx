@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import type { Facets } from "@/server/catalog/queries";
 import { activeFilterCount, filtersToSearchParams, parseFilters, PRODUCT_TYPES, SORTS, type ListingFilters, type SortKey } from "@/lib/catalog-filters";
 import { formatMoney, toMajor } from "@/lib/money";
@@ -17,9 +17,16 @@ function useFilters() {
   const [pending, start] = useTransition();
   const filters = useMemo(() => parseFilters(new URLSearchParams(params.toString())), [params]);
   const density = params.get("density");
+  // Rapid clicks: build on the latest requested filters, not the URL that hasn't updated yet.
+  const latest = useRef(filters);
+  useEffect(() => {
+    latest.current = filters;
+  }, [filters]);
 
   function apply(patch: Partial<ListingFilters>, opts: { keepPage?: boolean } = {}) {
-    const next = { ...filters, ...patch, page: opts.keepPage ? (patch.page ?? filters.page) : 1 };
+    const base = latest.current;
+    const next = { ...base, ...patch, page: opts.keepPage ? (patch.page ?? base.page) : 1 };
+    latest.current = next;
     const qs = filtersToSearchParams(next);
     if (density) qs.set("density", density);
     start(() => router.push(qs.size ? `${pathname}?${qs}` : pathname, { scroll: false }));
