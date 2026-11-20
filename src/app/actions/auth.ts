@@ -19,7 +19,12 @@ import { db } from "@/server/db";
 import { fieldErrors, loginSchema, profileSchema, registerSchema } from "@/lib/validation";
 import { safeRedirectPath } from "@/lib/utils";
 
-export type FormState = { ok?: boolean; error?: string; message?: string; fieldErrors?: Record<string, string> } | null;
+export type FormState = { ok?: boolean; error?: string; message?: string; fieldErrors?: Record<string, string>; values?: Record<string, string> } | null;
+
+/** Echo back non-secret fields so React's post-action form reset doesn't wipe what the shopper typed. */
+function echo(form: FormData, keys: string[]) {
+  return Object.fromEntries(keys.map((k) => [k, String(form.get(k) ?? "").slice(0, 300)]));
+}
 
 function failure(err: unknown): FormState {
   if (err instanceof z.ZodError) return { error: "Please fix the highlighted fields.", fieldErrors: fieldErrors(err) };
@@ -35,7 +40,7 @@ export async function loginAction(_: FormState, form: FormData): Promise<FormSta
     const user = await authenticate(input.email, input.password, await clientIp());
     await startSession(user.id);
   } catch (err) {
-    return failure(err);
+    return { ...failure(err), values: echo(form, ["email"]) };
   }
   redirect(next);
 }
@@ -50,11 +55,11 @@ export async function registerAction(_: FormState, form: FormData): Promise<Form
       password: form.get("password"),
       marketingOptIn: form.get("marketingOptIn") === "on",
     });
-    if (form.get("terms") !== "on") return { error: "Please accept the terms to create an account.", fieldErrors: { terms: "Required" } };
+    if (form.get("terms") !== "on") return { error: "Please accept the terms to create an account.", fieldErrors: { terms: "Required" }, values: echo(form, ["name", "email"]) };
     const user = await registerUser(input);
     await startSession(user.id);
   } catch (err) {
-    return failure(err);
+    return { ...failure(err), values: echo(form, ["name", "email"]) };
   }
   redirect(`${next}${next.includes("?") ? "&" : "?"}welcome=1`);
 }

@@ -41,7 +41,7 @@ export function LoginForm({ next }: { next: string }) {
       <input type="hidden" name="next" value={next} />
       <FormError message={state?.error} />
       <Field label="Email" htmlFor="email" error={fe.email}>
-        <Input id="email" name="email" type="email" autoComplete="email" required invalid={!!fe.email} inputMode="email" />
+        <Input id="email" name="email" type="email" autoComplete="email" required invalid={!!fe.email} inputMode="email" defaultValue={state?.values?.email} />
       </Field>
       <Field label="Password" htmlFor="password" error={fe.password}>
         <PasswordInput id="password" name="password" autoComplete="current-password" invalid={!!fe.password} />
@@ -66,10 +66,10 @@ export function RegisterForm({ next }: { next: string }) {
       <input type="hidden" name="next" value={next} />
       <FormError message={state?.error} />
       <Field label="Full name" htmlFor="name" error={fe.name}>
-        <Input id="name" name="name" autoComplete="name" required invalid={!!fe.name} maxLength={80} />
+        <Input id="name" name="name" autoComplete="name" required invalid={!!fe.name} maxLength={80} defaultValue={state?.values?.name} />
       </Field>
       <Field label="Email" htmlFor="email" error={fe.email}>
-        <Input id="email" name="email" type="email" autoComplete="email" required invalid={!!fe.email} inputMode="email" />
+        <Input id="email" name="email" type="email" autoComplete="email" required invalid={!!fe.email} inputMode="email" defaultValue={state?.values?.email} />
       </Field>
       <Field label="Password" htmlFor="password" error={fe.password} hint="At least 8 characters, with a letter and a number.">
         <PasswordInput id="password" name="password" autoComplete="new-password" invalid={!!fe.password} />

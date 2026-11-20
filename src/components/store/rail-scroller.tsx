@@ -26,7 +26,7 @@ export function RailScroller({ children, label, className }: { children: ReactNo
 
   return (
     <div className={cn("group/rail relative", className)}>
-      <div ref={ref} role="region" aria-label={label} tabIndex={0} className="scrollbar-none snap-rail -mx-4 flex gap-3 overflow-x-auto px-4 pb-2 sm:-mx-6 sm:gap-5 sm:px-6 xl:-mx-10 xl:px-10">
+      <div ref={ref} role="region" aria-label={label} tabIndex={0} className="scrollbar-none snap-rail -mx-4 flex scroll-px-4 gap-3 overflow-x-auto px-4 pb-2 sm:-mx-6 sm:scroll-px-6 sm:gap-5 sm:px-6 xl:-mx-10 xl:scroll-px-10 xl:px-10">
         {children}
       </div>
       {(["left", "right"] as const).map((side) => {

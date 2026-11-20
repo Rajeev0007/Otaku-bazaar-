@@ -34,7 +34,7 @@ export function HeroCarousel({ slides }: { slides: Slide[] }) {
       onBlur={() => setPaused(false)}
     >
       <div
-        className="relative h-[68vh] min-h-[440px] max-h-[720px] overflow-hidden rounded-[1.75rem] bg-surface sm:h-[62vh]"
+        className="relative h-[58vh] min-h-[420px] max-h-[720px] sm:min-h-[480px] overflow-hidden rounded-[1.75rem] bg-surface sm:h-[62vh]"
         onTouchStart={(e) => (touch.current = e.touches[0]?.clientX ?? null)}
         onTouchEnd={(e) => {
           if (touch.current === null) return;

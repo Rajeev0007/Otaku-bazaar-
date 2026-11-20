@@ -13,3 +13,5 @@ public/uploads/
 .DS_Store
 tsconfig.tsbuildinfo
 pw-browsers/
+test-results/
+playwright-report/

@@ -104,7 +104,7 @@ export function SearchBox() {
     <>
       <button onClick={() => setOpen(true)} className="hidden h-10 w-64 items-center gap-2.5 rounded-full border border-line bg-surface-2 px-4 text-sm text-subtle transition hover:border-line-strong xl:flex" aria-label="Search">
         <Icon name="search" size={17} />
-        <span className="flex-1 text-left">Search anime, merch, SKU…</span>
+        <span className="flex-1 truncate text-left">Search anime & merch</span>
         <kbd className="rounded border border-line px-1.5 text-[0.65rem]">⌘K</kbd>
       </button>
       <button onClick={() => setOpen(true)} className="grid h-10 w-10 place-items-center rounded-full hover:bg-surface-2 xl:hidden" aria-label="Search">
