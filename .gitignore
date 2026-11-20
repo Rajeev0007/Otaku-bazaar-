@@ -1,0 +1,17 @@
+node_modules/
+.next/
+out/
+coverage/
+pgtools/
+.env
+.env.*
+!.env.example
+*.tsbuildinfo
+next-env.d.ts
+public/uploads/
+.pgdata/
+.DS_Store
+tsconfig.tsbuildinfo
+pw-browsers/
+test-results/
+playwright-report/

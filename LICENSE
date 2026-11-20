@@ -1,0 +1,30 @@
+Copyright (c) 2026 The Otaku Bazaar ([Legal entity name]). All rights reserved.
+
+PROPRIETARY AND CONFIDENTIAL
+
+This software and its source code, design, documentation, and associated assets (the "Software") are the
+exclusive property of the copyright holder. No licence or right is granted to any person to use, copy,
+modify, merge, publish, distribute, sublicense, sell, host, or create derivative works of the Software,
+in whole or in part, except:
+
+  (a) by the copyright holder; or
+  (b) by contractors, employees, or service providers acting on the copyright holder's behalf and under
+      written agreement, solely to develop, maintain, or operate The Otaku Bazaar store.
+
+Unauthorised use, reproduction, or distribution is prohibited and may result in civil and criminal
+liability under applicable law, including the Copyright Act, 1957 (India).
+
+The Software is provided "as is", without warranty of any kind, express or implied.
+
+Third-party components
+----------------------
+The Software includes open-source packages (for example Next.js, React, Prisma, Tailwind CSS, Zod) that
+remain under their own licences (mainly MIT and Apache-2.0). Those licences apply to those packages only
+and their notices are kept in the respective package directories under node_modules. Nothing in this
+licence restricts rights granted by those open-source licences.
+
+Brand and content
+-----------------
+"The Otaku Bazaar" name and logo, and original product artwork, are the copyright holder's brand assets.
+Third-party character names, series titles, and trademarks referenced in product listings belong to their
+respective owners.
