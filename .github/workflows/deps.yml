@@ -25,7 +25,9 @@ jobs:
       - name: Embedded Postgres
         run: |
           mkdir -p pgtools && cd pgtools && npm init -y >/dev/null
-          npm install --no-audit --no-fund @embedded-postgres/linux-x64@^17
+          V=$(npm view @embedded-postgres/linux-x64 versions --json | node -e "const v=JSON.parse(require('fs').readFileSync(0));console.log(v.filter(x=>x.startsWith('17.')).pop())")
+          echo "embedded-postgres $V"
+          npm install --no-audit --no-fund @embedded-postgres/linux-x64@$V
           ls node_modules/@embedded-postgres/linux-x64/native/bin | head -30
           ls node_modules/@embedded-postgres/linux-x64/native/share/postgresql/extension | grep -i trgm || true
       - run: tar czf nm.tgz node_modules package-lock.json pgtools
