@@ -1,0 +1,7 @@
+name: ci
+on: [push]
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - run: npm view next version && npm view prisma version && npm view tailwindcss version && npm view zod version && npm view vitest version && npm view react version
