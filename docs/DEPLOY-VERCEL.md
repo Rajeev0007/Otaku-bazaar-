@@ -36,11 +36,11 @@ The new store is in pull request **#1** (branch `rebuild-nextjs`).
 
 ## Step 3: Import the project
 
-> **Already have a Vercel project for the old store?** Reuse it: open it, go to **Settings → Build and Deployment**, set **Framework Preset** to **Next.js**, and clear any custom Build/Output/Install command overrides. Then continue at **Step 4**. You can delete the old store's `RAZORPAY_*`, `ADMIN_KEY`, `SMTP_*` and Upstash variables later; the new store doesn't use them yet.
+> **Already have a Vercel project for the old store?** Reuse it: open it, go to **Settings → Build and Deployment**, set **Framework Preset** to **Next.js**, and switch **off** any Build/Output/Install command overrides so `vercel.json` takes effect. Then continue at **Step 4**. You can delete the old store's `RAZORPAY_*`, `ADMIN_KEY`, `SMTP_*` and Upstash variables later; the new store doesn't use them yet.
 
 1. In Vercel, click **Add New… → Project**.
 2. Find **Otaku-bazaar-** and click **Import**.
-3. Leave **Framework Preset** as **Next.js**. Leave Build Command, Output Directory and Install Command as they are, because the project's `vercel-build` script handles migrations automatically.
+3. Leave every setting as it is. The repository's `vercel.json` already sets the framework (Next.js), install command (`npm ci`), build command (`npm run vercel-build`, which also updates the database) and server region (Singapore, `sin1`, next to the database).
 4. Click **Deploy**.
 
 **The first build will fail with "DATABASE_URL is not set". That's expected.** Continue to Step 4.
@@ -51,7 +51,7 @@ The new store is in pull request **#1** (branch `rebuild-nextjs`).
 
 1. In your Vercel project, open the **Storage** tab.
 2. Click **Create Database**, choose **Neon** (Serverless Postgres), and click **Continue**.
-3. Pick region **Singapore (ap-southeast-1)** or **Mumbai** if offered, since they're closest to Indian shoppers. Choose the **Free** plan.
+3. Pick region **Singapore (aws-ap-southeast-1)**, which is closest to India and matches the site's server region in `vercel.json`. If you choose a different region, change `"regions"` in `vercel.json` to the nearest Vercel region (for example `bom1` for Mumbai). Choose the **Free** plan.
 4. Name it `otaku-bazaar`, click **Create**, then **Connect** it to this project.
 5. When asked which environments to connect:
    - Tick **Production**.
@@ -92,12 +92,16 @@ Go to **Settings → Environment Variables**. Add each row below, tick **Product
 
 1. Open the **Deployments** tab.
 2. Click the **⋯** menu on the latest deployment and choose **Redeploy**.
-3. Watch the build log. You should see:
+3. Watch the build log. A correct build shows these lines in order:
    ```
-   • Applying database migrations
+   ▸ Generating Prisma client
+   ▸ Applying database migrations (production)
+   ▸ First-run setup check
    • First deploy: seeding base store data
+   ▸ Building Next.js
    ```
-4. When it says **Ready**, click **Visit**. You should see the homepage.
+   If you see `✔ Generated Prisma Client` followed straight by `▲ Next.js` **without** the "Applying database migrations" line, Vercel is using an old build command override. Clear it (see the note in Step 3) and redeploy.
+4. When it says **Ready**, open `https://YOUR-SITE/api/health`. It should show `"status":"ok"`. Then click **Visit** to see the homepage.
 
 On this first deploy, the store creates its roles and permissions, categories, anime list, shipping rates, homepage layout and policy page templates. It never overwrites anything you edit later.
 
@@ -172,4 +176,8 @@ The "Continue with Google" button appears automatically once these are set.
 | No verification or password-reset emails arrive | Do Step 9. Check Resend → Logs. |
 | `/admin` says "You don't have access" | Repeat Step 8 and make sure you signed out and back in. |
 | Google button missing | `GOOGLE_CLIENT_ID` isn't set for that environment. |
+| Build log has no "Applying database migrations" line | A dashboard Build Command override is set. Settings → Build and Deployment → turn off the override, then redeploy. |
+| Build stops with "AUTH_SECRET is missing or shorter than 32 characters" | Add `AUTH_SECRET` for that environment (Production **and** Preview) in Step 6. |
+| `/api/health` shows `migrations_missing` | The database wasn't updated. Check the build log for the migration step, then redeploy. |
+| `/admin` dashboard shows "Launch setup" items | Each item links to its fix. Work through them before launch. |
 | Build fails during "Applying database migrations" | Check the Neon database is connected, and that `DATABASE_URL_UNPOOLED` exists under Settings → Environment Variables. |

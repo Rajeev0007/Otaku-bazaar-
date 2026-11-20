@@ -19,7 +19,7 @@ export default async function AdminProducts({ searchParams }: { searchParams: Pr
   const page = Math.max(1, Number(sp.page) || 1);
   const where: Prisma.ProductWhereInput = {
     ...(status ? { status } : {}),
-    ...(q ? { OR: [{ name: { contains: q, mode: "insensitive" } }, { variants: { some: { sku: { contains: q, mode: "insensitive" } } } }] } : {}),
+    ...(q ? { OR: [{ name: { contains: q, mode: "insensitive" } }, { tags: { has: q.toLowerCase() } }, { variants: { some: { sku: { contains: q, mode: "insensitive" } } } }] } : {}),
   };
   const [total, products, counts] = await Promise.all([
     db.product.count({ where }),

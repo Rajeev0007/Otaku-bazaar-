@@ -27,6 +27,7 @@ test("live search shows typo-tolerant suggestions", async ({ page }) => {
 
 test("filters combine and persist in the URL", async ({ page }) => {
   await page.goto("/c/clothing");
+  await page.waitForLoadState("networkidle"); // let client filters hydrate before interacting
   const filters = page.getByRole("complementary", { name: "Filters" });
   await filters.getByText("Size", { exact: true }).click();
   await filters.getByRole("button", { name: "M", exact: true }).click();

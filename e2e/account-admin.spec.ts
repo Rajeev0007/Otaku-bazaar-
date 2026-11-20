@@ -24,6 +24,8 @@ test("guest cart survives sign-up; wishlist syncs to the account", async ({ page
   await page.getByLabel(/I agree to the/).check();
   await page.getByRole("button", { name: "Create account" }).click();
   await expect(page.getByText(/at least 8 characters/i).first()).toBeVisible();
+  // React resets the form after the failed action; wait for that before typing again.
+  await expect(page.getByLabel("Password", { exact: true })).toHaveValue("");
   await expect(page.getByLabel("Email", { exact: true })).toHaveValue(email); // typed values survive the error
   await page.getByLabel("Password", { exact: true }).fill("strongpass123");
   await page.getByLabel(/I agree to the/).check();

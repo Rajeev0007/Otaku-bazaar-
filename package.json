@@ -3,11 +3,11 @@
   "version": "4.0.0",
   "private": true,
   "engines": {
-    "node": ">=20.9"
+    "node": "22.x"
   },
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "bash scripts/vercel-build.sh",
     "vercel-build": "bash scripts/vercel-build.sh",
     "start": "next start",
     "typecheck": "tsc --noEmit",
