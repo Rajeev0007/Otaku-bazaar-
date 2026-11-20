@@ -41,6 +41,24 @@ export const storeSettingsSchema = z.object({
       discord: z.string().default(""),
     })
     .default({}),
+  // Business identity. India's Consumer Protection (E-Commerce) Rules require the legal name, address,
+  // customer care contact and a grievance officer to be displayed on the platform.
+  business: z
+    .object({
+      legalName: z.string().default(""),
+      address: z.string().default(""),
+      gstin: z.string().default(""),
+      cin: z.string().default(""),
+    })
+    .default({}),
+  grievanceOfficer: z
+    .object({
+      name: z.string().default(""),
+      designation: z.string().default("Grievance Officer"),
+      email: z.string().default(""),
+      phone: z.string().default(""),
+    })
+    .default({}),
   maintenanceMode: z.boolean().default(false),
   maintenanceMessage: z.string().default("We're upgrading the store. Back shortly."),
 });

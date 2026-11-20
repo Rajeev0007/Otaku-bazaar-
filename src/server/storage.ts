@@ -47,6 +47,13 @@ export async function storeImage(file: File, folder = "products"): Promise<{ url
   if (!kind) throw new UploadError("Only JPEG, PNG, WebP or AVIF images are allowed.");
   const key = `${folder}/${new Date().toISOString().slice(0, 7)}/${randomBytes(12).toString("hex")}.${kind.ext}`;
 
+  // Vercel Blob: connect a Blob store to the Vercel project and BLOB_READ_WRITE_TOKEN is set automatically.
+  if (process.env.BLOB_READ_WRITE_TOKEN) {
+    const { put } = await import("@vercel/blob");
+    const blob = await put(key, buf, { access: "public", contentType: kind.type, addRandomSuffix: false, cacheControlMaxAge: 31536000 });
+    return { url: blob.url, bytes: buf.length, type: kind.type };
+  }
+
   const storage = s3();
   if (storage) {
     await storage.client.send(
@@ -54,7 +61,9 @@ export async function storeImage(file: File, folder = "products"): Promise<{ url
     );
     return { url: `https://${storage.host}/${key}`, bytes: buf.length, type: kind.type };
   }
-  if (process.env.NODE_ENV === "production") throw new UploadError("Media storage is not configured. Set the S3_* and MEDIA_PUBLIC_HOST environment variables.");
+  if (process.env.NODE_ENV === "production") {
+    throw new UploadError("Image storage is not set up. In Vercel, open Storage → Create → Blob and connect it to this project, then redeploy.");
+  }
   // Development fallback: local disk under public/uploads (git-ignored).
   const dest = path.join(process.cwd(), "public", "uploads", key);
   await mkdir(path.dirname(dest), { recursive: true });

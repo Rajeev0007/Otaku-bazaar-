@@ -15,6 +15,13 @@ describe("markdown renderer", () => {
     expect(out).toContain('<a href="/pages/about">About</a>');
   });
 
+  it("renders tables", () => {
+    const out = html("| Method | Days |\n|---|---|\n| Standard | 4–7 |\n| **Express** | 2–3 |");
+    expect(out).toContain("<th>Method</th>");
+    expect(out).toContain("<td>Standard</td>");
+    expect(out).toContain("<td><strong>Express</strong></td>");
+  });
+
   it("never emits raw HTML or script URLs", () => {
     const out = html('<img src=x onerror=alert(1)>\n\n[click](javascript:alert(1))\n\n[x](//evil.com)');
     expect(out).not.toContain("<img");

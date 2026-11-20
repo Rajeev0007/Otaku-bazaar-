@@ -14,8 +14,17 @@ export function slugify(input: string): string {
     .slice(0, 80);
 }
 
+/** Public site URL. APP_URL wins; on Vercel it falls back to the production domain, then the deployment URL. */
+export function siteOrigin(): string {
+  const explicit = process.env.APP_URL ?? process.env.NEXT_PUBLIC_APP_URL;
+  if (explicit) return explicit.replace(/\/$/, "");
+  const vercel = process.env.VERCEL_ENV === "production" ? process.env.VERCEL_PROJECT_PRODUCTION_URL : process.env.VERCEL_URL;
+  if (vercel) return `https://${vercel}`;
+  return "http://localhost:3000";
+}
+
 export function appUrl(path = "/"): string {
-  const base = (process.env.APP_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000").replace(/\/$/, "");
+  const base = siteOrigin();
   return base + (path.startsWith("/") ? path : `/${path}`);
 }
 

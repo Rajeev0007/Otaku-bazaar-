@@ -67,13 +67,33 @@ export function Markdown({ source, className }: { source: string; className?: st
       const items: string[] = [];
       while (i < lines.length && /^\s*\d+\. /.test(lines[i]!)) items.push(lines[i++]!.replace(/^\s*\d+\. /, ""));
       blocks.push(<ol key={k}>{items.map((t, n) => <li key={n}>{inline(t, `${k}-${n}`)}</li>)}</ol>);
+    } else if (line.trim().startsWith("|") && /^\s*\|?\s*:?-{3,}/.test(lines[i + 1] ?? "")) {
+      const cells = (l: string) => l.trim().replace(/^\||\|$/g, "").split("|").map((c) => c.trim());
+      const head = cells(line);
+      i += 2;
+      const rows: string[][] = [];
+      while (i < lines.length && lines[i]!.trim().startsWith("|")) rows.push(cells(lines[i++]!));
+      blocks.push(
+        <div key={k} className="my-4 overflow-x-auto">
+          <table>
+            <thead>
+              <tr>{head.map((h, n) => <th key={n}>{inline(h, `${k}-h${n}`)}</th>)}</tr>
+            </thead>
+            <tbody>
+              {rows.map((r, ri) => (
+                <tr key={ri}>{r.map((c, ci) => <td key={ci}>{inline(c, `${k}-${ri}-${ci}`)}</td>)}</tr>
+              ))}
+            </tbody>
+          </table>
+        </div>,
+      );
     } else if (line.startsWith("> ")) {
       const quote: string[] = [];
       while (i < lines.length && lines[i]!.startsWith("> ")) quote.push(lines[i++]!.slice(2));
       blocks.push(<blockquote key={k}>{inline(quote.join(" "), k)}</blockquote>);
     } else {
       const para: string[] = [];
-      while (i < lines.length && lines[i]!.trim() && !/^(#{2,3} |\s*[-*] |\s*\d+\. |> )/.test(lines[i]!)) para.push(lines[i++]!);
+      while (i < lines.length && lines[i]!.trim() && !/^(#{2,3} |\s*[-*] |\s*\d+\. |> |\s*\|)/.test(lines[i]!)) para.push(lines[i++]!);
       blocks.push(<p key={k}>{inline(para.join(" "), k)}</p>);
     }
   }

@@ -9,7 +9,8 @@ const csp = [
   // Next.js injects inline bootstrap scripts; 'unsafe-eval' only in dev for React Refresh.
   `script-src 'self' 'unsafe-inline'${isProd ? "" : " 'unsafe-eval'"}`,
   "style-src 'self' 'unsafe-inline'",
-  `img-src 'self' data: blob:${mediaHost ? ` https://${mediaHost}` : ""} https://lh3.googleusercontent.com`,
+  `img-src 'self' data: blob:${mediaHost ? ` https://${mediaHost}` : ""} https://*.public.blob.vercel-storage.com https://lh3.googleusercontent.com`,
+  `media-src 'self'${mediaHost ? ` https://${mediaHost}` : ""} https://*.public.blob.vercel-storage.com`,
   "font-src 'self' data:",
   "connect-src 'self'",
   "frame-ancestors 'none'",
@@ -35,6 +36,7 @@ const config: NextConfig = {
     remotePatterns: [
       ...(mediaHost ? [{ protocol: "https" as const, hostname: mediaHost }] : []),
       { protocol: "https", hostname: "lh3.googleusercontent.com" },
+      { protocol: "https", hostname: "*.public.blob.vercel-storage.com" },
     ],
   },
   experimental: {

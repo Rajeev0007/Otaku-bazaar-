@@ -31,6 +31,14 @@ export function SettingsForm({ initial }: { initial: StoreSettings }) {
     youtube: initial.social.youtube,
     x: initial.social.x,
     discord: initial.social.discord,
+    legalName: initial.business.legalName,
+    address: initial.business.address,
+    gstin: initial.business.gstin,
+    cin: initial.business.cin,
+    goName: initial.grievanceOfficer.name,
+    goDesignation: initial.grievanceOfficer.designation,
+    goEmail: initial.grievanceOfficer.email,
+    goPhone: initial.grievanceOfficer.phone,
     maintenanceMode: initial.maintenanceMode,
     maintenanceMessage: initial.maintenanceMessage,
   });
@@ -65,6 +73,8 @@ export function SettingsForm({ initial }: { initial: StoreSettings }) {
         taxLabel: s.taxLabel,
         support: { email: s.supportEmail, phone: s.supportPhone, hours: s.supportHours },
         social: { instagram: s.instagram, youtube: s.youtube, x: s.x, discord: s.discord },
+        business: { legalName: s.legalName, address: s.address, gstin: s.gstin, cin: s.cin },
+        grievanceOfficer: { name: s.goName, designation: s.goDesignation, email: s.goEmail, phone: s.goPhone },
         maintenanceMode: s.maintenanceMode,
         maintenanceMessage: s.maintenanceMessage,
       });
@@ -121,6 +131,26 @@ export function SettingsForm({ initial }: { initial: StoreSettings }) {
             <Input id={k} value={s[k]} onChange={set(k)} placeholder="https://" />
           </Field>
         ))}
+      </section>
+      <section className={box}>
+        <h2 className="font-semibold">Business details</h2>
+        <p className="text-xs text-muted">Shown in the footer. Indian e-commerce rules require your legal name and address to be displayed. Leave blank until registered.</p>
+        <Field label="Legal business name" htmlFor="legalName"><Input id="legalName" value={s.legalName} onChange={set("legalName")} placeholder="e.g. Otaku Bazaar Private Limited" /></Field>
+        <Field label="Registered address" htmlFor="address"><Input id="address" value={s.address} onChange={set("address")} /></Field>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="GSTIN" htmlFor="gstin"><Input id="gstin" value={s.gstin} onChange={set("gstin")} /></Field>
+          <Field label="CIN / LLPIN (optional)" htmlFor="cin"><Input id="cin" value={s.cin} onChange={set("cin")} /></Field>
+        </div>
+      </section>
+      <section className={box}>
+        <h2 className="font-semibold">Grievance officer</h2>
+        <p className="text-xs text-muted">Required for Indian e-commerce. Complaints must be acknowledged within 48 hours and resolved within one month.</p>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Name" htmlFor="goName"><Input id="goName" value={s.goName} onChange={set("goName")} /></Field>
+          <Field label="Designation" htmlFor="goDesignation"><Input id="goDesignation" value={s.goDesignation} onChange={set("goDesignation")} /></Field>
+          <Field label="Email" htmlFor="goEmail"><Input id="goEmail" type="email" value={s.goEmail} onChange={set("goEmail")} /></Field>
+          <Field label="Phone" htmlFor="goPhone"><Input id="goPhone" value={s.goPhone} onChange={set("goPhone")} /></Field>
+        </div>
       </section>
       <section className={`${box} lg:col-span-2`}>
         <h2 className="font-semibold">Maintenance mode</h2>

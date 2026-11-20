@@ -13,9 +13,10 @@ describe("admin product management", () => {
     const admin = await makeUser();
     const { category } = await makeProduct();
     const sku = `ADM-${Date.now()}`;
+    const run = Date.now().toString(36);
     const p = await saveProduct(
       {
-        name: "Integration Kitsune Hoodie",
+        name: `Integration Kitsune Hoodie ${run}`,
         description: "A cosy hoodie for tests.",
         status: "ACTIVE",
         categoryId: category.id,
@@ -29,7 +30,7 @@ describe("admin product management", () => {
       admin.id,
     );
     const saved = await db.product.findUniqueOrThrow({ where: { id: p.id }, include: { variants: { include: { inventory: { include: { transactions: true } } } } } });
-    expect(saved.slug).toBe("integration-kitsune-hoodie");
+    expect(saved.slug).toBe(`integration-kitsune-hoodie-${run}`);
     expect(saved.minPrice).toBe(199_900);
     expect(saved.discountPercent).toBe(20);
     expect(saved.inStock).toBe(true);

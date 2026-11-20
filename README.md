@@ -72,14 +72,18 @@ The suites cover:
 
 CI (`.github/workflows/ci.yml`) runs all of the above against Postgres 17 on every pull request.
 
-## Deploy (Vercel + Neon)
+## Deploy to Vercel
 
-1. Create a Neon project and copy the **pooled** connection string. Run `npm run db:migrate` once with the **direct** string.
-2. In Vercel, import the repo and set `DATABASE_URL`, `AUTH_SECRET`, `APP_URL` and, optionally, `GOOGLE_CLIENT_ID`/`SECRET`, `RESEND_API_KEY`/`MAIL_FROM`, and `S3_*` plus `MEDIA_PUBLIC_HOST` (Cloudflare R2 works well). Do **not** set `SEED_DEMO_ACCOUNTS` in production.
-3. Seed taxonomy and settings without demo accounts: `npm run db:seed`.
-4. For preview/staging deployments, set `NOINDEX=true` to keep them out of search engines.
+Follow **[docs/DEPLOY-VERCEL.md](docs/DEPLOY-VERCEL.md)**. It's a browser-only, step-by-step guide covering the Neon database, Blob image storage, environment variables, the first owner account, email, Google login and a custom domain.
 
-The app refuses to start in production without a 32+ character `AUTH_SECRET`.
+Each Vercel build runs `scripts/vercel-build.sh`. It applies database migrations, seeds the base store data on the first deploy only (never overwriting admin edits), optionally promotes `BOOTSTRAP_ADMIN_EMAIL` to the first Super Admin, then builds the site.
+
+## Security, legal and licence
+
+- [SECURITY.md](SECURITY.md): how data is protected, how to report a vulnerability, and the operator checklist (2FA, roles, backups).
+- [docs/LAUNCH-CHECKLIST.md](docs/LAUNCH-CHECKLIST.md): business registration, GST, mandatory website disclosures, policy pages, anime IP and licensing risk, payment gateway KYC, and DPDP privacy duties.
+- Policy page templates (Terms, Privacy, Shipping, Returns, Cancellation, Payment, Grievance Redressal, Cookies, Disclaimer, IP) are created on first setup. Edit them in **Admin → Pages & policies**.
+- [LICENSE](LICENSE): proprietary, all rights reserved.
 
 ## Project layout
 

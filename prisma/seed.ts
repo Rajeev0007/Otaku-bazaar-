@@ -1,9 +1,11 @@
 /*
  * Seed: roles/permissions, store settings, taxonomy, DEMO products, homepage layout, policy templates.
  * Demo products use generated placeholder art and are tagged "demo" so they can be bulk-archived before launch.
+ * Demo products are created when SEED_DEMO_PRODUCTS=true (default outside production).
  * Demo staff/customer accounts are created only when SEED_DEMO_ACCOUNTS=true and NODE_ENV !== "production".
  *
- * Safe to re-run: everything is upserted by a natural key.
+ * Safe to re-run: everything is upserted by a natural key and existing rows are never overwritten,
+ * so edits made in the admin survive (except role permissions, which are reset to the defaults below).
  */
 import { PrismaClient, ProductKind, InventoryReason } from "@prisma/client";
 import { DEFAULT_ROLES, PERMISSIONS } from "../src/server/auth/permissions";
@@ -149,14 +151,14 @@ async function seedTaxonomy() {
     const parent = await db.category.upsert({
       where: { slug: c.slug },
       create: { slug: c.slug, name: c.name, position: pos++, returnWindowDays: c.returnWindowDays, imageUrl: demoArtUrl(TEMPLATES.find((t) => t.category === c.slug || c.children?.some((ch) => ch.slug === t.category))?.kind ?? "gift", "#f0506e", c.name, "OB") },
-      update: { name: c.name, position: pos - 1 },
+      update: {}, // never overwrite admin edits on re-run
     });
     let cpos = 0;
     for (const ch of c.children ?? []) {
       await db.category.upsert({
         where: { slug: ch.slug },
         create: { slug: ch.slug, name: ch.name, parentId: parent.id, position: cpos++, imageUrl: demoArtUrl(TEMPLATES.find((t) => t.category === ch.slug)?.kind ?? "gift", "#f0506e", ch.name, "OB") },
-        update: { name: ch.name, parentId: parent.id },
+        update: {},
       });
     }
   }
@@ -164,7 +166,7 @@ async function seedTaxonomy() {
     await db.animeFranchise.upsert({
       where: { slug: f.slug },
       create: { slug: f.slug, name: f.name, accentColor: f.color, isTrending: f.trending, position: i, imageUrl: demoArtUrl("figure", f.color, f.name, f.mark), bannerUrl: demoArtUrl("banner", f.color, f.name, f.mark), description: `Merch, apparel and collectibles inspired by ${f.name}.` },
-      update: { accentColor: f.color, isTrending: f.trending, position: i },
+      update: {},
     });
   }
   await db.brand.upsert({ where: { slug: "otaku-bazaar-originals" }, create: { slug: "otaku-bazaar-originals", name: "Otaku Bazaar Originals" }, update: {} });
@@ -419,7 +421,10 @@ async function main() {
   await seedRoles();
   await seedMarkets();
   await seedTaxonomy();
-  await seedProducts();
+  // Demo catalog: on by default in development; opt in explicitly elsewhere with SEED_DEMO_PRODUCTS=true.
+  const demoProducts = process.env.SEED_DEMO_PRODUCTS ? process.env.SEED_DEMO_PRODUCTS === "true" : process.env.NODE_ENV !== "production";
+  if (demoProducts) await seedProducts();
+  else console.log("  demo products: skipped (SEED_DEMO_PRODUCTS is not true)");
   await seedCollections();
   await seedAccountsAndReviews();
   await syncAggregates();
