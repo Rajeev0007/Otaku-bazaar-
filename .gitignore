@@ -11,3 +11,4 @@ next-env.d.ts
 public/uploads/
 .pgdata/
 .DS_Store
+tsconfig.tsbuildinfo
