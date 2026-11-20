@@ -12,3 +12,4 @@ public/uploads/
 .pgdata/
 .DS_Store
 tsconfig.tsbuildinfo
+pw-browsers/

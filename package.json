@@ -17,6 +17,7 @@
     "test": "vitest run",
     "test:unit": "vitest run tests/unit",
     "test:integration": "vitest run tests/integration",
+    "test:e2e": "playwright test",
     "postinstall": "prisma generate"
   },
   "prisma": {
@@ -32,6 +33,7 @@
     "zod": "~3.25.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.55.0",
     "@tailwindcss/postcss": "~4.1.0",
     "@types/node": "^22.0.0",
     "@types/react": "~19.1.0",

@@ -30,7 +30,11 @@ jobs:
           npm install --no-audit --no-fund @embedded-postgres/linux-x64@$V
           ls node_modules/@embedded-postgres/linux-x64/native/bin | head -30
           ls node_modules/@embedded-postgres/linux-x64/native/share/postgresql/extension | grep -i trgm || true
-      - run: tar czf nm.tgz node_modules package-lock.json pgtools
+      - name: Headless Chromium for Playwright
+        run: |
+          PLAYWRIGHT_BROWSERS_PATH=$PWD/pw-browsers npx playwright install chromium-headless-shell
+          ls pw-browsers
+      - run: tar czf nm.tgz node_modules package-lock.json pgtools pw-browsers
       - uses: actions/upload-artifact@v4
         with:
           name: deps
