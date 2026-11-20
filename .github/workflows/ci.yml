@@ -4,4 +4,13 @@ jobs:
   probe:
     runs-on: ubuntu-latest
     steps:
-      - run: npm view next version && npm view prisma version && npm view tailwindcss version && npm view zod version && npm view vitest version && npm view react version
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --ignore-scripts --no-audit --no-fund
+      - run: tar czf nm.tgz node_modules package-lock.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: deps
+          path: nm.tgz
