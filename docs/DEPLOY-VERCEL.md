@@ -43,7 +43,7 @@ The new store is in pull request **#1** (branch `rebuild-nextjs`).
 3. Leave every setting as it is. The repository's `vercel.json` already sets the framework (Next.js), install command (`npm ci`), build command (`npm run vercel-build`, which also updates the database) and server region (Singapore, `sin1`, next to the database).
 4. Click **Deploy**.
 
-**The first build will fail with "DATABASE_URL is not set". That's expected.** Continue to Step 4.
+The first build succeeds even without a database. Visiting the site shows a **setup page** listing what's still missing. Continue to Step 4.
 
 ---
 
@@ -170,7 +170,8 @@ The "Continue with Google" button appears automatically once these are set.
 
 | Problem | Fix |
 |---|---|
-| Build fails with "DATABASE_URL is not set" | Do Step 4, then redeploy. |
+| Site shows "Finish setup to open it" | The page lists exactly which settings are missing. Fix them in Vercel and redeploy. |
+| Build log shows `⚠ No database connected` | Do Step 4, then redeploy. |
 | Site shows "Application error", and logs mention AUTH_SECRET | `AUTH_SECRET` is missing or shorter than 32 characters (Step 6). |
 | Image upload says "Image storage is not set up" | Do Step 5, then redeploy. |
 | No verification or password-reset emails arrive | Do Step 9. Check Resend → Logs. |
