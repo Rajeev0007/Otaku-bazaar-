@@ -14,6 +14,13 @@ const stored = z
     razorpayKeyId: z.string().default(""),
     razorpayKeySecretEnc: z.string().nullable().default(null),
     razorpayWebhookSecretEnc: z.string().nullable().default(null),
+    shiprocketEmail: z.string().default(""),
+    shiprocketPasswordEnc: z.string().nullable().default(null),
+    shiprocketPickup: z.string().default("Primary"),
+    shiprocketWebhookToken: z.string().default(""),
+    pkgLength: z.number().default(25),
+    pkgBreadth: z.number().default(20),
+    pkgHeight: z.number().default(5),
   })
   .default({});
 
@@ -23,6 +30,7 @@ export type Integrations = {
   googleClientId: string | null;
   googleClientSecret: string | null;
   razorpay: { keyId: string; keySecret: string; webhookSecret: string | null; mode: "test" | "live" } | null;
+  shiprocket: { email: string; password: string; pickupLocation: string; webhookToken: string; pkg: { length: number; breadth: number; height: number } } | null;
   /** Where each value came from, for the admin screen. Never contains secret values. */
   status: {
     email: "env" | "admin" | "off" | "unreadable";
@@ -32,6 +40,11 @@ export type Integrations = {
     razorpay: "env" | "admin" | "off" | "unreadable";
     razorpayKeyId: string;
     razorpayWebhook: boolean;
+    shiprocket: "admin" | "off" | "unreadable";
+    shiprocketEmail: string;
+    shiprocketPickup: string;
+    shiprocketWebhookToken: string;
+    pkg: { length: number; breadth: number; height: number };
   };
 };
 
@@ -60,6 +73,9 @@ export const getIntegrations = cache(async (): Promise<Integrations> => {
   const rzp = envRzp ?? (s.razorpayKeyId && adminRzpSecret ? { keyId: s.razorpayKeyId, keySecret: adminRzpSecret, webhookSecret: adminRzpWebhook } : null);
   const razorpay = rzp ? { ...rzp, mode: rzp.keyId.startsWith("rzp_live_") ? ("live" as const) : ("test" as const) } : null;
 
+  const srPassword = await decryptSecret(s.shiprocketPasswordEnc);
+  const shiprocket = s.shiprocketEmail && srPassword ? { email: s.shiprocketEmail, password: srPassword, pickupLocation: s.shiprocketPickup || "Primary", webhookToken: s.shiprocketWebhookToken, pkg: { length: s.pkgLength, breadth: s.pkgBreadth, height: s.pkgHeight } } : null;
+
   const mailFrom = env.MAIL_FROM || s.mailFrom || "The Otaku Bazaar <onboarding@resend.dev>";
   return {
     resendApiKey,
@@ -67,6 +83,7 @@ export const getIntegrations = cache(async (): Promise<Integrations> => {
     googleClientId,
     googleClientSecret,
     razorpay,
+    shiprocket,
     status: {
       email: envResend ? "env" : adminResend ? "admin" : s.resendApiKeyEnc ? "unreadable" : "off",
       google: envGoogle ? "env" : googleClientId ? "admin" : s.googleClientSecretEnc ? "unreadable" : "off",
@@ -75,6 +92,11 @@ export const getIntegrations = cache(async (): Promise<Integrations> => {
       razorpay: envRzp ? "env" : razorpay ? "admin" : s.razorpayKeySecretEnc ? "unreadable" : "off",
       razorpayKeyId: envRzp?.keyId ?? s.razorpayKeyId,
       razorpayWebhook: !!razorpay?.webhookSecret,
+      shiprocket: shiprocket ? "admin" : s.shiprocketPasswordEnc ? "unreadable" : "off",
+      shiprocketEmail: s.shiprocketEmail,
+      shiprocketPickup: s.shiprocketPickup,
+      shiprocketWebhookToken: s.shiprocketWebhookToken,
+      pkg: { length: s.pkgLength, breadth: s.pkgBreadth, height: s.pkgHeight },
     },
   };
 });
@@ -90,6 +112,13 @@ export const integrationsInput = z.object({
   razorpayKeySecret: z.string().trim().max(200).optional(),
   razorpayWebhookSecret: z.string().trim().max(200).optional(),
   clearRazorpay: z.boolean().optional(),
+  shiprocketEmail: z.union([z.literal(""), z.string().trim().email("Enter the Shiprocket API user email")]).optional(),
+  shiprocketPassword: z.string().max(200).optional(),
+  shiprocketPickup: z.string().trim().max(80).optional(),
+  pkgLength: z.coerce.number().min(1).max(200).optional(),
+  pkgBreadth: z.coerce.number().min(1).max(200).optional(),
+  pkgHeight: z.coerce.number().min(0.5).max(200).optional(),
+  clearShiprocket: z.boolean().optional(),
 });
 
 export async function saveIntegrations(raw: unknown) {
@@ -117,6 +146,21 @@ export async function saveIntegrations(raw: unknown) {
     if (input.razorpayKeyId !== undefined) next.razorpayKeyId = input.razorpayKeyId;
     if (input.razorpayKeySecret) next.razorpayKeySecretEnc = await encryptSecret(input.razorpayKeySecret);
     if (input.razorpayWebhookSecret) next.razorpayWebhookSecretEnc = await encryptSecret(input.razorpayWebhookSecret);
+  }
+  if (input.clearShiprocket) {
+    next.shiprocketEmail = "";
+    next.shiprocketPasswordEnc = null;
+  } else {
+    if (input.shiprocketEmail !== undefined) next.shiprocketEmail = input.shiprocketEmail;
+    if (input.shiprocketPassword) next.shiprocketPasswordEnc = await encryptSecret(input.shiprocketPassword);
+    if (input.shiprocketPickup) next.shiprocketPickup = input.shiprocketPickup;
+    if (input.pkgLength) next.pkgLength = input.pkgLength;
+    if (input.pkgBreadth) next.pkgBreadth = input.pkgBreadth;
+    if (input.pkgHeight) next.pkgHeight = input.pkgHeight;
+    if (next.shiprocketEmail && !next.shiprocketWebhookToken) {
+      const { randomToken } = await import("@/server/security/crypto");
+      next.shiprocketWebhookToken = randomToken(24);
+    }
   }
   await db.setting.upsert({ where: { key: "integrations" }, create: { key: "integrations", value: next }, update: { value: next } });
 }

@@ -58,6 +58,21 @@ The dashboard shows a **Launch setup** checklist. Each item links to the right s
 2. For UPI, cards, net banking and wallets: **Admin → Integrations → Payments**. Paste your Razorpay **test** Key ID and secret, add the webhook URL shown there in Razorpay with a secret, and save. Place a test order.
 3. When Razorpay activates your account, replace them with **live** keys. The checkout shows "TEST MODE" until you do.
 
+## Add a product (works on your phone)
+
+Admin → Products → **Add product**:
+1. **Photos:** tap *Add photos* (camera or gallery). Large photos are shrunk automatically.
+2. **Basics:** name, category, anime, description.
+3. **Price & stock:** price, optional MRP (shows % off), stock. For T-shirts or phone cases choose **Sizes / colours**, tap the sizes and colours, then set the stock for each option (or "Set all").
+4. Press **Publish product**. SKU codes are created for you. *More details* (material, tags, SEO…) is optional.
+
+Use **Duplicate** on an existing product to add similar items quickly.
+
+## Ship orders and handle returns
+
+- **Shiprocket (optional):** Admin → Integrations → Shipping. Paste your Shiprocket API user and pickup location name, and add the webhook URL and token shown there in Shiprocket. Each order then gets a **Book courier & ship** button that books the courier, prints the label and keeps tracking updated automatically. Without Shiprocket, type the courier and tracking number on the order page.
+- **Returns:** customers request returns, exchanges or replacements from their order page after delivery (within each product's return window). Handle them in Admin → **Returns**: approve → item received (restock) → refund or send the exchange. Prepaid orders are refunded through Razorpay; for cash-on-delivery orders you send the money by UPI/bank and record it.
+
 ## Optional
 
 - **Own domain:** Vercel → Settings → **Domains** → Add, then follow the DNS instructions. Links update automatically.

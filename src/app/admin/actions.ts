@@ -551,3 +551,69 @@ export async function saveCouponAction(raw: unknown): Promise<AdminResult> {
     return { ok: true, message: `Coupon ${row.code} saved.` };
   });
 }
+
+export async function duplicateProductAction(productId: string): Promise<AdminResult<{ id: string; slug: string }>> {
+  return guarded("products.write", async (actorId) => {
+    const { duplicateProduct } = await import("@/server/admin/products");
+    const p = await duplicateProduct(z.string().max(40).parse(productId), actorId);
+    revalidatePath("/admin/products");
+    return { ok: true, message: "Copy created", data: { id: p.id, slug: p.slug } };
+  });
+}
+
+// ── Returns ──
+
+export async function updateReturnAction(returnId: string, data: Record<string, unknown>): Promise<AdminResult> {
+  const to = z.enum(["APPROVED", "REJECTED", "PICKUP_SCHEDULED", "RECEIVED", "REFUNDED", "EXCHANGED", "CLOSED"]).parse(data.status);
+  return guarded(to === "REFUNDED" ? "orders.refund" : "orders.write", async (actorId) => {
+    const { updateReturn, ReturnError } = await import("@/server/returns/service");
+    const amount = data.refundAmount === undefined || data.refundAmount === "" ? undefined : Math.round(Number(data.refundAmount) * 100);
+    if (amount !== undefined && !(amount > 0)) return { ok: false, error: "Enter a valid refund amount." };
+    try {
+      const r = await updateReturn(z.string().max(40).parse(returnId), to, {
+        actorId,
+        note: z.string().trim().max(500).optional().parse(data.note || undefined),
+        restock: data.restock === true,
+        refundAmount: amount,
+        trackingNumber: z.string().trim().max(80).optional().parse(data.trackingNumber || undefined),
+      });
+      await audit({ actorId, action: `return.${to.toLowerCase()}`, entityType: "ReturnRequest", entityId: r.id });
+    } catch (err) {
+      if (err instanceof ReturnError) return { ok: false, error: err.message };
+      throw err;
+    }
+    revalidatePath("/admin/returns");
+    return { ok: true, message: "Return updated. The customer has been emailed." };
+  });
+}
+
+// ── Shipping (Shiprocket) ──
+
+export async function shipWithShiprocketAction(orderId: string): Promise<AdminResult> {
+  return guarded("orders.write", async (actorId) => {
+    const { shipWithShiprocket, ShippingError } = await import("@/server/shipping/shiprocket");
+    try {
+      const r = await shipWithShiprocket(z.string().max(40).parse(orderId), actorId);
+      await audit({ actorId, action: "order.shiprocket", entityType: "Order", entityId: orderId, data: { awb: r.awb, courier: r.courier } });
+      revalidatePath(`/admin/orders/${orderId}`);
+      return { ok: true, message: `Booked with ${r.courier}. AWB ${r.awb}. Print the label from the Shipment box.` };
+    } catch (err) {
+      if (err instanceof ShippingError) return { ok: false, error: err.message };
+      throw err;
+    }
+  });
+}
+
+export async function refreshTrackingAction(orderId: string): Promise<AdminResult> {
+  return guarded("orders.write", async () => {
+    const { refreshTracking, ShippingError } = await import("@/server/shipping/shiprocket");
+    try {
+      const r = await refreshTracking(z.string().max(40).parse(orderId));
+      revalidatePath(`/admin/orders/${orderId}`);
+      return { ok: true, message: r.applied ? `Updated to ${String((r as { status?: string }).status).toLowerCase().replace(/_/g, " ")}.` : "No new tracking updates." };
+    } catch (err) {
+      if (err instanceof ShippingError) return { ok: false, error: err.message };
+      throw err;
+    }
+  });
+}

@@ -120,3 +120,20 @@ export async function trackOrderAction(_: unknown, form: FormData): Promise<{ er
   return { number };
 }
 
+
+export async function requestReturnAction(number: string, raw: unknown): Promise<{ ok: true; message: string } | { ok: false; error: string }> {
+  const { requestReturn, ReturnError } = await import("@/server/returns/service");
+  const { canViewOrder } = await import("@/server/orders/access");
+  try {
+    await enforceRateLimit(`return:${await clientIp()}`, 10, 60 * 60);
+    const user = await getCurrentUser();
+    const order = await canViewOrder(number, user);
+    if (!order) return { ok: false, error: "Order not found." };
+    const r = await requestReturn(order.id, raw, user?.id ?? null);
+    return { ok: true, message: `Request ${r.number} sent. We'll email you within 2 business days.` };
+  } catch (err) {
+    if (err instanceof ReturnError || err instanceof RateLimitError) return { ok: false, error: err.message };
+    if (err instanceof z.ZodError) return { ok: false, error: err.issues[0]?.message ?? "Please check the form." };
+    throw err;
+  }
+}

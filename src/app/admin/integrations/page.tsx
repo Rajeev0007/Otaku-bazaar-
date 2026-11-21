@@ -113,6 +113,36 @@ export default async function IntegrationsPage() {
           )}
         </Card>
 
+        <Card
+          title="Shipping (Shiprocket)"
+          description="Book couriers, print labels and get automatic tracking updates. Optional: you can always enter tracking numbers by hand."
+          actions={<Badge s={status.shiprocket} />}
+          className="lg:col-span-2"
+        >
+          <SimpleForm action={saveIntegrationsAction} className="grid gap-3 sm:grid-cols-2">
+            <ol className="list-decimal space-y-1 pl-5 text-xs text-muted sm:col-span-2">
+              <li>In Shiprocket: Settings → API → <b>Configure</b> → create an API user (use a different email from your login). Paste its email and password below.</li>
+              <li>Settings → Pickup Address: note the <b>pickup location name</b> (e.g. “Primary”) and enter it below.</li>
+              {status.shiprocketWebhookToken && (
+                <li>
+                  Settings → API → <b>Webhooks</b>: URL <code className="break-all rounded bg-surface-2 px-1">{appUrl("/api/webhooks/shiprocket")}</code>, token <code className="break-all rounded bg-surface-2 px-1">{status.shiprocketWebhookToken}</code>
+                </li>
+              )}
+            </ol>
+            <Field label="API user email" htmlFor="shiprocketEmail"><Input id="shiprocketEmail" name="shiprocketEmail" type="email" defaultValue={status.shiprocketEmail} autoComplete="off" /></Field>
+            <Field label="API user password" htmlFor="shiprocketPassword" hint={status.shiprocket === "admin" ? "Saved. Leave blank to keep it." : undefined}>
+              <Input id="shiprocketPassword" name="shiprocketPassword" type="password" autoComplete="off" placeholder={status.shiprocket === "admin" ? "•••••••• saved" : ""} />
+            </Field>
+            <Field label="Pickup location name" htmlFor="shiprocketPickup"><Input id="shiprocketPickup" name="shiprocketPickup" defaultValue={status.shiprocketPickup} /></Field>
+            <div className="grid grid-cols-3 gap-2">
+              <Field label="Box L (cm)" htmlFor="pkgLength"><Input id="pkgLength" name="pkgLength" type="number" defaultValue={status.pkg.length} /></Field>
+              <Field label="W (cm)" htmlFor="pkgBreadth"><Input id="pkgBreadth" name="pkgBreadth" type="number" defaultValue={status.pkg.breadth} /></Field>
+              <Field label="H (cm)" htmlFor="pkgHeight"><Input id="pkgHeight" name="pkgHeight" type="number" step="0.5" defaultValue={status.pkg.height} /></Field>
+            </div>
+            {status.shiprocket !== "off" && <Checkbox name="clearShiprocket" label="Disconnect Shiprocket" className="sm:col-span-2" />}
+          </SimpleForm>
+        </Card>
+
         <Card title="Cash on delivery" description="Turn COD on or off, and set the order limit and fee.">
           <p className="text-sm text-muted">Managed in <a href="/admin/settings" className="underline">Store settings → Cash on delivery</a>.</p>
         </Card>

@@ -340,12 +340,14 @@ export async function processRefund(refundId: string) {
       const full = p.refundedAmount >= p.amount;
       await tx.payment.update({ where: { id: p.id }, data: { status: full ? "REFUNDED" : "PARTIALLY_REFUNDED" } });
       await tx.order.update({ where: { id: r.orderId }, data: { paymentStatus: full ? "REFUNDED" : "PARTIALLY_REFUNDED" } });
-      await tx.orderEvent.create({ data: { orderId: r.orderId, status: full ? "REFUNDED" : "CANCELLED", message: `Refund of ₹${r.amount / 100} issued to the original payment method (5–7 business days)` } });
+      const ord = await tx.order.findUniqueOrThrow({ where: { id: r.orderId }, select: { status: true } });
+      await tx.orderEvent.create({ data: { orderId: r.orderId, status: full ? "REFUNDED" : ord.status, message: `Refund of ₹${r.amount / 100} issued to the original payment method (5–7 business days)` } });
       return done;
     });
   } catch (err) {
     await db.refund.update({ where: { id: r.id }, data: { status: "FAILED" } });
-    await db.orderEvent.create({ data: { orderId: r.orderId, status: "CANCELLED", isPublic: false, message: `⚠ Refund failed: ${err instanceof Error ? err.message : "unknown error"}. Retry from the admin.` } });
+    const ord = await db.order.findUniqueOrThrow({ where: { id: r.orderId }, select: { status: true } });
+    await db.orderEvent.create({ data: { orderId: r.orderId, status: ord.status, isPublic: false, message: `⚠ Refund failed: ${err instanceof Error ? err.message : "unknown error"}. Retry from the admin.` } });
     return db.refund.findUniqueOrThrow({ where: { id: r.id } });
   }
 }
@@ -368,17 +370,17 @@ export function nextStatuses(s: OrderStatus): OrderStatus[] {
   return NEXT[s] ?? [];
 }
 
-export async function updateOrderStatus(orderId: string, to: OrderStatus, opts: { actorId: string; message?: string; carrier?: string; trackingNumber?: string; trackingUrl?: string }) {
+export async function updateOrderStatus(orderId: string, to: OrderStatus, opts: { actorId: string | null; message?: string; carrier?: string; trackingNumber?: string; trackingUrl?: string; labelUrl?: string; providerRef?: string; location?: string }) {
   await db.$transaction(async (tx) => {
     const o = await tx.order.findUniqueOrThrow({ where: { id: orderId }, include: { shipments: true, payments: true } });
     if (!nextStatuses(o.status).includes(to)) throw new OrderError(`Can't move an order from ${o.status} to ${to}.`);
     if (to === "SHIPPED") {
       if (!opts.carrier || !opts.trackingNumber) throw new OrderError("Enter the courier and tracking number to mark as shipped.");
       await tx.shipment.create({
-        data: { orderId, carrier: opts.carrier, trackingNumber: opts.trackingNumber, trackingUrl: opts.trackingUrl || null, status: "SHIPPED", shippedAt: new Date(), events: { create: { status: "SHIPPED", occurredAt: new Date(), message: "Handed to courier" } } },
+        data: { orderId, carrier: opts.carrier, trackingNumber: opts.trackingNumber, trackingUrl: opts.trackingUrl || null, labelUrl: opts.labelUrl ?? null, providerRef: opts.providerRef ?? null, status: "SHIPPED", shippedAt: new Date(), events: { create: { status: "SHIPPED", occurredAt: new Date(), message: "Handed to courier" } } },
       });
     } else if (o.shipments[0]) {
-      await tx.shipment.update({ where: { id: o.shipments[0].id }, data: { status: to, ...(to === "DELIVERED" ? { deliveredAt: new Date() } : {}), events: { create: { status: to, occurredAt: new Date(), message: opts.message } } } });
+      await tx.shipment.update({ where: { id: o.shipments[0].id }, data: { status: to, ...(to === "DELIVERED" ? { deliveredAt: new Date() } : {}), events: { create: { status: to, occurredAt: new Date(), message: opts.message, location: opts.location } } } });
     }
     // COD: money is collected on delivery.
     if (to === "DELIVERED" && o.paymentMethod === "cod") {

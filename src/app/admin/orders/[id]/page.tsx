@@ -8,7 +8,8 @@ import { formatMoney } from "@/lib/money";
 import { Card, PageHeader } from "@/components/admin/ui";
 import { ActionButton, SimpleForm } from "@/components/admin/simple-form";
 import { Checkbox, Field, Input, Select, Textarea } from "@/components/ui/field";
-import { addOrderNoteAction, adminCancelOrderAction, retryRefundAction, updateOrderStatusAction } from "@/app/admin/actions";
+import { addOrderNoteAction, adminCancelOrderAction, refreshTrackingAction, retryRefundAction, shipWithShiprocketAction, updateOrderStatusAction } from "@/app/admin/actions";
+import { getIntegrations } from "@/server/integrations";
 
 export default async function OrderDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -25,6 +26,7 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
   const canRefund = can(staff, "orders.refund");
   const cancellable = ["PENDING_PAYMENT", "PLACED", "PAYMENT_CONFIRMED", "PROCESSING"].includes(o.status);
   const s = o.shipments[0];
+  const shiprocketOn = !!(await getIntegrations()).shiprocket;
 
   return (
     <>
@@ -60,8 +62,13 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
             {o.notes && <p className="mt-3 rounded-xl bg-surface-2 p-3 text-sm">Customer note: {o.notes}</p>}
           </Card>
 
+          {canWrite && next.includes("SHIPPED") && shiprocketOn && (
+            <Card title="Ship with Shiprocket" description="Books the cheapest available courier, schedules pickup, creates the label and marks the order shipped with tracking.">
+              <ActionButton action={shipWithShiprocketAction.bind(null, o.id)} className="h-11 rounded-full bg-accent px-6 text-sm font-semibold text-accent-fg disabled:opacity-60">Book courier &amp; ship</ActionButton>
+            </Card>
+          )}
           {canWrite && next.length > 0 && (
-            <Card title="Update status" description="The customer is emailed when the order ships, goes out for delivery, is delivered, or has a delivery problem.">
+            <Card title={shiprocketOn && next.includes("SHIPPED") ? "Or update status manually" : "Update status"} description="The customer is emailed when the order ships, goes out for delivery, is delivered, or has a delivery problem.">
               <SimpleForm action={updateOrderStatusAction.bind(null, o.id)} submitLabel="Update order" className="grid gap-3 sm:grid-cols-2">
                 <Field label="New status" htmlFor="status">
                   <Select id="status" name="status" defaultValue={next[0]}>
@@ -111,6 +118,10 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
               <p className="text-sm">{s.carrier} · <b>{s.trackingNumber}</b></p>
               {s.trackingUrl && <a href={s.trackingUrl} target="_blank" rel="noreferrer" className="text-xs text-accent hover:underline">Open tracking ↗</a>}
               <p className="text-xs text-muted">Shipped {s.shippedAt?.toLocaleDateString("en-IN")}{s.deliveredAt && ` · delivered ${s.deliveredAt.toLocaleDateString("en-IN")}`}</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {s.labelUrl && <a href={s.labelUrl} target="_blank" rel="noreferrer" className="rounded-full bg-fg px-3 py-1.5 text-xs font-semibold text-bg">Print shipping label</a>}
+                {shiprocketOn && s.providerRef?.startsWith("shiprocket:") && canWrite && <ActionButton action={refreshTrackingAction.bind(null, o.id)} className="rounded-full border border-line px-3 py-1.5 text-xs">Refresh tracking</ActionButton>}
+              </div>
             </Card>
           )}
           <Card title="Payments & refunds">

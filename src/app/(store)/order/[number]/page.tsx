@@ -11,6 +11,9 @@ import { Icon } from "@/components/ui/icon";
 import { FormSuccess } from "@/components/ui/field";
 import { ProductImage } from "@/components/store/product-image";
 import { CancelOrder, PayNow } from "@/components/checkout/order-actions";
+import { ReturnForm } from "@/components/checkout/return-form";
+import { returnableItems, RETURN_REASONS } from "@/server/returns/service";
+import { db } from "@/server/db";
 
 export const metadata: Metadata = { title: "Your order", robots: { index: false } };
 
@@ -29,6 +32,11 @@ export default async function OrderPage({ params, searchParams }: { params: Prom
   const shipment = o.shipments[0];
   const canCancel = ["PLACED", "PAYMENT_CONFIRMED", "PROCESSING"].includes(o.status);
   const expiresAt = new Date(o.createdAt.getTime() + RESERVATION_MINUTES * 60_000);
+  const canReturn = ["DELIVERED", "RETURNED"].includes(o.status);
+  const [returnable, returns] = await Promise.all([
+    canReturn ? returnableItems(o.id) : Promise.resolve(null),
+    db.returnRequest.findMany({ where: { orderId: o.id }, orderBy: { createdAt: "desc" } }),
+  ]);
 
   return (
     <div className="container-page max-w-5xl pb-16 pt-8">
@@ -141,6 +149,18 @@ export default async function OrderPage({ params, searchParams }: { params: Prom
             </div>
           )}
           {canCancel && <CancelOrder number={o.number} />}
+          {returns.length > 0 && (
+            <div className="rounded-[var(--radius-card)] border border-line bg-surface p-5 text-sm">
+              <h3 className="mb-2 font-semibold">Returns & exchanges</h3>
+              {returns.map((r) => (
+                <p key={r.id} className="flex justify-between gap-2 py-1">
+                  <span>{r.number} · {r.kind === "RETURN" ? "Refund" : r.kind === "EXCHANGE" ? "Exchange" : "Replacement"}</span>
+                  <span className="font-medium">{r.status.charAt(0) + r.status.slice(1).toLowerCase().replace("_", " ")}</span>
+                </p>
+              ))}
+            </div>
+          )}
+          {returnable && <ReturnForm number={o.number} items={returnable.items.map((i) => ({ ...i, deadline: i.deadline?.toISOString() ?? null }))} reasons={RETURN_REASONS} cod={o.paymentMethod === "cod"} />}
           <p className="text-center text-xs text-muted">Need help? <Link href="/pages/contact" className="underline">Contact us</Link> with your order number.</p>
         </aside>
       </div>

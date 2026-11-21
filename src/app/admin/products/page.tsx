@@ -5,6 +5,7 @@ import { db } from "@/server/db";
 import { formatMoney } from "@/lib/money";
 import { PageHeader, StatusPill, Table } from "@/components/admin/ui";
 import { ButtonLink } from "@/components/ui/button";
+import { Icon } from "@/components/ui/icon";
 import { Pagination } from "@/components/ui/misc";
 import { ProductImage } from "@/components/store/product-image";
 import { AdminProductSearch, BulkBar } from "@/components/admin/product-list-client";
@@ -42,7 +43,7 @@ export default async function AdminProducts({ searchParams }: { searchParams: Pr
 
   return (
     <>
-      <PageHeader title="Products" description={`${total} product${total === 1 ? "" : "s"}`} actions={can(user, "products.write") && <ButtonLink href="/admin/products/new" size="sm">Add product</ButtonLink>} />
+      <PageHeader title="Products" description={`${total} product${total === 1 ? "" : "s"}`} actions={can(user, "products.write") && <ButtonLink href="/admin/products/new" size="md"><Icon name="plus" size={16} /> Add product</ButtonLink>} />
       <div className="mb-4 flex flex-wrap items-center gap-2">
         {tabs.map(([label, s]) => {
           const n = s ? (counts.find((c) => c.status === s)?._count ?? 0) : counts.reduce((a, c) => a + c._count, 0);
@@ -56,6 +57,28 @@ export default async function AdminProducts({ searchParams }: { searchParams: Pr
           <AdminProductSearch initial={q ?? ""} />
         </div>
       </div>
+      {/* Phones: simple cards */}
+      <ul className="space-y-2 md:hidden">
+        {products.map((p) => {
+          const stock = p.variants.reduce((n, v) => n + Math.max(0, (v.inventory?.onHand ?? 0) - (v.inventory?.reserved ?? 0)), 0);
+          return (
+            <li key={p.id}>
+              <Link href={`/admin/products/${p.id}`} className="flex items-center gap-3 rounded-2xl border border-line bg-surface p-3 active:bg-surface-2">
+                <span className="relative h-16 w-14 shrink-0 overflow-hidden rounded-xl bg-surface-2">{p.images[0] && <ProductImage src={p.images[0].url} alt="" fill sizes="56px" className="object-cover" />}</span>
+                <span className="min-w-0 flex-1">
+                  <span className="line-clamp-2 text-sm font-medium">{p.name}</span>
+                  <span className="mt-1 flex items-center gap-2 text-xs text-muted">
+                    <StatusPill status={p.status} /> {formatMoney(p.minPrice, p.currency)} · <span className={stock === 0 ? "text-danger" : stock < 10 ? "text-warning" : ""}>{stock} in stock</span>
+                  </span>
+                </span>
+                <span className="text-muted">›</span>
+              </Link>
+            </li>
+          );
+        })}
+        {!products.length && <p className="rounded-2xl border border-dashed border-line p-6 text-center text-sm text-muted">No products found.</p>}
+      </ul>
+      <div className="hidden md:block">
       <BulkBar canWrite={can(user, "products.write")} canDelete={can(user, "products.delete")}>
         <Table head={["", "Product", "Status", "Stock", "Price", "Category", "Updated"]} empty={!products.length && <p className="p-6 text-center text-sm text-muted">No products found.</p>}>
           {products.map((p) => {
@@ -84,6 +107,7 @@ export default async function AdminProducts({ searchParams }: { searchParams: Pr
           })}
         </Table>
       </BulkBar>
+      </div>
       <div className="mt-6">
         <Pagination page={page} pageCount={Math.ceil(total / PER_PAGE)} hrefFor={href} />
       </div>
