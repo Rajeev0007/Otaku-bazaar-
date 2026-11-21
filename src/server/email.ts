@@ -1,4 +1,5 @@
 import { db } from "@/server/db";
+import { getIntegrations } from "@/server/integrations";
 
 type Email = { to: string; subject: string; html: string; text: string; template: string; userId?: string | null };
 
@@ -28,7 +29,8 @@ export function button(href: string, label: string) {
  * server console so links can be followed. Every attempt is recorded in the Notification table.
  */
 export async function sendEmail(email: Email): Promise<boolean> {
-  const key = process.env.RESEND_API_KEY;
+  const integ = await getIntegrations();
+  const key = integ.resendApiKey;
   const record = await db.notification.create({
     data: {
       userId: email.userId ?? null,
@@ -42,8 +44,8 @@ export async function sendEmail(email: Email): Promise<boolean> {
 
   if (!key) {
     if (process.env.NODE_ENV === "production") {
-      await db.notification.update({ where: { id: record.id }, data: { status: "SKIPPED", error: "RESEND_API_KEY not set" } });
-      console.error(`[email] RESEND_API_KEY is not set; "${email.subject}" to ${email.to} was not sent`);
+      await db.notification.update({ where: { id: record.id }, data: { status: "SKIPPED", error: "Email not set up (Admin → Integrations)" } });
+      console.error(`[email] Email is not set up in Admin → Integrations; "${email.subject}" to ${email.to} was not sent`);
       return false;
     }
     console.info(`\n[email:dev] To: ${email.to}\nSubject: ${email.subject}\n${email.text}\n`);
@@ -56,7 +58,7 @@ export async function sendEmail(email: Email): Promise<boolean> {
       method: "POST",
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json", "Idempotency-Key": record.id },
       body: JSON.stringify({
-        from: process.env.MAIL_FROM ?? "The Otaku Bazaar <onboarding@resend.dev>",
+        from: integ.mailFrom,
         to: [email.to],
         subject: email.subject,
         html: email.html,

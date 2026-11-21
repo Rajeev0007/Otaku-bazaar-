@@ -26,11 +26,13 @@ describe("password hashing", () => {
 
 describe("signed cookies", () => {
   it("rejects tampered values", () => {
-    const s = sign("cart-token");
-    expect(unsign(s)).toBe("cart-token");
-    expect(unsign(s.replace("cart", "cort"))).toBeNull();
-    expect(unsign("cart-token.forged")).toBeNull();
-    expect(unsign(undefined)).toBeNull();
+    const k = "k".repeat(40);
+    const s = sign("cart-token", k);
+    expect(unsign(s, k)).toBe("cart-token");
+    expect(unsign(s, "x".repeat(40))).toBeNull();
+    expect(unsign(s.replace("cart", "cort"), k)).toBeNull();
+    expect(unsign("cart-token.forged", k)).toBeNull();
+    expect(unsign(undefined, k)).toBeNull();
   });
 
   it("stores only hashes of secrets", () => {

@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { getAuthSecret } from "@/server/secrets";
+import { getIntegrations } from "@/server/integrations";
 import { cookies } from "next/headers";
 import { z } from "zod";
 import { safeEqual, unsign } from "@/server/security/crypto";
@@ -19,7 +21,7 @@ const userInfoSchema = z.object({
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const jar = await cookies();
-  const raw = unsign(jar.get(OAUTH_COOKIE)?.value);
+  const raw = unsign(jar.get(OAUTH_COOKIE)?.value, await getAuthSecret());
   jar.delete({ name: OAUTH_COOKIE, path: "/api/auth/google" });
   const fail = (code = "oauth") => NextResponse.redirect(appUrl(`/login?error=${code}`));
 
@@ -34,14 +36,16 @@ export async function GET(req: Request) {
   const code = url.searchParams.get("code");
   if (!code || !safeEqual(state, saved.state)) return fail();
 
+  const integ = await getIntegrations();
+  if (!integ.googleClientId || !integ.googleClientSecret) return fail();
   try {
     const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({
         code,
-        client_id: process.env.GOOGLE_CLIENT_ID ?? "",
-        client_secret: process.env.GOOGLE_CLIENT_SECRET ?? "",
+        client_id: integ.googleClientId,
+        client_secret: integ.googleClientSecret,
         redirect_uri: appUrl("/api/auth/google/callback"),
         grant_type: "authorization_code",
         code_verifier: saved.verifier,

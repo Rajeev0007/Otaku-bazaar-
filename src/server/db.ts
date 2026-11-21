@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import { resolveDatabaseUrl } from "@/lib/env";
+import { resolveDatabaseUrl } from "../lib/env";
 
 // One client per process; reused across hot reloads in development.
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };

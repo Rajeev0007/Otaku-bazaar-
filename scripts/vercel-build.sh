@@ -21,9 +21,6 @@ ON_VERCEL=false
 { [ "${VERCEL:-}" = "1" ] || [ "${RUN_MIGRATIONS:-}" = "true" ]; } && ON_VERCEL=true
 
 if $ON_VERCEL; then
-  SECRET="${AUTH_SECRET:-}"
-  [ "${#SECRET}" -lt 32 ] && warn "AUTH_SECRET is missing or shorter than 32 characters. The site will show a setup page until you add it (Settings → Environment Variables)."
-
   if [ -z "$DATABASE_URL" ]; then
     warn "No database connected (DATABASE_URL). Skipping migrations. Connect Neon in Vercel → Storage, then redeploy."
   elif [ "${SKIP_MIGRATIONS:-}" = "true" ]; then

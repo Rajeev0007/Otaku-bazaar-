@@ -55,22 +55,15 @@ export function safeEqual(a: string, b: string): boolean {
   return ab.length === bb.length && timingSafeEqual(ab, bb);
 }
 
-/** Signs a value as `value.signature` for short-lived, tamper-evident cookies. */
-export function sign(value: string, secret = authSecret()): string {
+/** Signs a value as `value.signature` for short-lived, tamper-evident cookies. Get the secret from getAuthSecret(). */
+export function sign(value: string, secret: string): string {
   return `${value}.${hmac(value, secret)}`;
 }
 
-export function unsign(signed: string | undefined, secret = authSecret()): string | null {
+export function unsign(signed: string | undefined, secret: string): string | null {
   if (!signed) return null;
   const i = signed.lastIndexOf(".");
   if (i <= 0) return null;
   const value = signed.slice(0, i);
   return safeEqual(signed.slice(i + 1), hmac(value, secret)) ? value : null;
-}
-
-export function authSecret(): string {
-  const s = process.env.AUTH_SECRET;
-  if (s && s.length >= 32) return s;
-  if (process.env.NODE_ENV === "production") throw new Error("AUTH_SECRET must be set (32+ characters) in production");
-  return "development-only-secret-do-not-use-in-production!!";
 }

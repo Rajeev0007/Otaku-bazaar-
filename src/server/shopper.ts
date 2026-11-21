@@ -8,7 +8,7 @@ import { db } from "@/server/db";
 export async function getCartOwner(): Promise<CartOwner> {
   const user = await getCurrentUser();
   if (user) return { userId: user.id };
-  const token = guestCartTokenFromCookie((await cookies()).get(GUEST_CART_COOKIE)?.value);
+  const token = await guestCartTokenFromCookie((await cookies()).get(GUEST_CART_COOKIE)?.value);
   return { guestToken: token };
 }
 
@@ -17,7 +17,7 @@ export async function ensureCart() {
   const owner = await getCartOwner();
   const { cart, newGuestToken } = await getOrCreateCart(owner);
   if (newGuestToken) {
-    (await cookies()).set(GUEST_CART_COOKIE, guestCartCookieValue(newGuestToken), {
+    (await cookies()).set(GUEST_CART_COOKIE, await guestCartCookieValue(newGuestToken), {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",

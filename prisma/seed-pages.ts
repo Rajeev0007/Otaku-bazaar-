@@ -25,6 +25,7 @@ The Otaku Bazaar is an online store for anime fans, collectors and gift shoppers
 
 ## Who we are
 
+- Founder & owner: Satyam Behera
 - Legal name: [Legal entity name, e.g. "XYZ Private Limited" or proprietor's name]
 - Registered address: [Full registered address]
 - GSTIN: [GSTIN]

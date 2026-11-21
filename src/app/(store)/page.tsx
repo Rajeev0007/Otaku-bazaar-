@@ -10,6 +10,8 @@ import { ProductImage } from "@/components/store/product-image";
 import { Rating, SectionHeading } from "@/components/ui/misc";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { organizationJsonLd, JsonLd } from "@/lib/seo";
+import { getStoreSettings } from "@/server/settings";
+import { formatMoney } from "@/lib/money";
 
 type SectionConfig = { source?: RailSource; href?: string; kinds?: ProductKind[] };
 
@@ -184,9 +186,10 @@ async function Reviews({ title }: { title: string }) {
   );
 }
 
-function ValueProps() {
+async function ValueProps() {
+  const s = await getStoreSettings();
   const items: [IconName, string, string][] = [
-    ["truck", "Free shipping over ₹999", "Fast, tracked delivery across India"],
+    ["truck", s.freeShippingThreshold > 0 ? `Free shipping over ${formatMoney(s.freeShippingThreshold, s.baseCurrency)}` : "Fast delivery", "Fast, tracked delivery across India"],
     ["refresh", "Easy returns", "7-day returns on eligible items"],
     ["shield", "Secure checkout", "UPI, cards, net banking & more"],
     ["sparkles", "Premium quality", "Every piece checked before dispatch"],

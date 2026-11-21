@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/server/auth/session";
+import { getIntegrations } from "@/server/integrations";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { GoogleButton, RegisterForm } from "@/components/auth/auth-forms";
 import { safeRedirectPath } from "@/lib/utils";
@@ -24,7 +25,7 @@ export default async function RegisterPage({ searchParams }: { searchParams: Pro
         </>
       }
     >
-      <GoogleButton next={next} enabled={!!process.env.GOOGLE_CLIENT_ID} />
+      <GoogleButton next={next} enabled={!!(await getIntegrations()).googleClientId} />
       <RegisterForm next={next} />
     </AuthShell>
   );
