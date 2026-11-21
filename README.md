@@ -74,6 +74,9 @@ CI (`.github/workflows/ci.yml`) runs all of the above against Postgres 17 on eve
 
 ## Deploy to Vercel
 
+**Only one setting is needed: connect a Neon database in Vercel (one click).** Email, Google sign-in, social links, business details and everything else are managed in the admin panel.
+
+
 Follow **[docs/DEPLOY-VERCEL.md](docs/DEPLOY-VERCEL.md)**. It's a browser-only, step-by-step guide covering the Neon database, Blob image storage, environment variables, the first owner account, email, Google login and a custom domain.
 
 Each Vercel build runs `scripts/vercel-build.sh`. It applies database migrations, seeds the base store data on the first deploy only (never overwriting admin edits), optionally promotes `BOOTSTRAP_ADMIN_EMAIL` to the first Super Admin, then builds the site.
@@ -83,7 +86,7 @@ Each Vercel build runs `scripts/vercel-build.sh`. It applies database migrations
 - [SECURITY.md](SECURITY.md): how data is protected, how to report a vulnerability, and the operator checklist (2FA, roles, backups).
 - [docs/LAUNCH-CHECKLIST.md](docs/LAUNCH-CHECKLIST.md): business registration, GST, mandatory website disclosures, policy pages, anime IP and licensing risk, payment gateway KYC, and DPDP privacy duties.
 - Policy page templates (Terms, Privacy, Shipping, Returns, Cancellation, Payment, Grievance Redressal, Cookies, Disclaimer, IP) are created on first setup. Edit them in **Admin → Pages & policies**.
-- [LICENSE](LICENSE): proprietary, all rights reserved.
+- [LICENSE](LICENSE): proprietary. Owner: Satyam Behera. Built by Rajeev (keep the "Made by Rajeev" footer credit).
 
 ## Project layout
 

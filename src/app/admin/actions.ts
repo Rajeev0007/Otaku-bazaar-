@@ -294,3 +294,143 @@ export async function setStaffRolesAction(email: string, roleKeys: string[]): Pr
     return { ok: true, message: roles.length ? `${e} now has: ${roles.map((r) => r.name).join(", ")}.` : `Removed staff access for ${e}.` };
   });
 }
+
+// ── Integrations (email, Google) ──
+
+export async function saveIntegrationsAction(raw: unknown): Promise<AdminResult> {
+  return guarded("settings.write", async (actorId) => {
+    const { saveIntegrations } = await import("@/server/integrations");
+    try {
+      await saveIntegrations(raw);
+    } catch (err) {
+      if (err instanceof Error && !(err instanceof z.ZodError)) return { ok: false, error: err.message };
+      throw err;
+    }
+    // Never log secret values.
+    await audit({ actorId, action: "settings.integrations", entityType: "Setting", entityId: "integrations" });
+    revalidatePath("/admin/integrations");
+    return { ok: true, message: "Integrations saved." };
+  });
+}
+
+export async function sendTestEmailAction(): Promise<AdminResult> {
+  return guarded("settings.write", async () => {
+    const { getCurrentUser } = await import("@/server/auth/session");
+    const { sendEmail, emailLayout } = await import("@/server/email");
+    const user = await getCurrentUser();
+    if (!user) return { ok: false, error: "Please sign in." };
+    const ok = await sendEmail({
+      to: user.email,
+      userId: user.id,
+      template: "admin.test",
+      subject: "Test email from The Otaku Bazaar",
+      text: "Email sending works.",
+      html: emailLayout("Email works 🎉", "<p>Your store can send emails.</p>"),
+    });
+    return ok ? { ok: true, message: `Test email sent to ${user.email}.` } : { ok: false, error: "Sending failed. Check the API key and that your domain is verified in Resend (see Admin → Integrations)." };
+  });
+}
+
+// ── Demo catalog ──
+
+export async function loadDemoCatalogAction(): Promise<AdminResult> {
+  return guarded("products.write", async (actorId) => {
+    const { loadDemoCatalog } = await import("@/server/admin/demo");
+    const n = await loadDemoCatalog();
+    await audit({ actorId, action: "demo.load", entityType: "Product", data: { count: n } });
+    revalidatePath("/", "layout");
+    return { ok: true, message: `${n} demo products are in the store. Remove them before launch.` };
+  });
+}
+
+export async function removeDemoCatalogAction(): Promise<AdminResult> {
+  return guarded("products.delete", async (actorId) => {
+    const { removeDemoCatalog } = await import("@/server/admin/demo");
+    const r = await removeDemoCatalog(actorId);
+    revalidatePath("/", "layout");
+    return { ok: true, message: `Removed demo catalog: ${r.deleted} deleted, ${r.archived} archived.` };
+  });
+}
+
+// ── Customers ──
+
+export async function setCustomerStatusAction(userId: string, status: "ACTIVE" | "SUSPENDED" | "BANNED", reason: string): Promise<AdminResult> {
+  return guarded("customers.write", async (actorId) => {
+    const s = z.enum(["ACTIVE", "SUSPENDED", "BANNED"]).parse(status);
+    const id = z.string().max(40).parse(userId);
+    if (id === actorId) return { ok: false, error: "You can't change your own account status." };
+    const user = await db.user.findUnique({ where: { id }, select: { isStaff: true, email: true } });
+    if (!user) return { ok: false, error: "Customer not found." };
+    if (user.isStaff) return { ok: false, error: "This is a staff account. Remove their staff roles first (Staff & roles)." };
+    await db.$transaction([
+      db.user.update({ where: { id }, data: { status: s } }),
+      ...(s === "ACTIVE" ? [] : [db.session.deleteMany({ where: { userId: id } })]),
+    ]);
+    await audit({ actorId, action: "customer.status", entityType: "User", entityId: id, data: { email: user.email, status: s, reason: z.string().max(300).parse(reason) } });
+    revalidatePath(`/admin/customers/${id}`);
+    return { ok: true, message: s === "ACTIVE" ? "Account reactivated." : `Account ${s.toLowerCase()} and signed out everywhere.` };
+  });
+}
+
+export async function setCustomerTagsAction(userId: string, data: Record<string, unknown>): Promise<AdminResult> {
+  return guarded("customers.write", async (actorId) => {
+    const tags = z
+      .string()
+      .max(400)
+      .parse(data.tags ?? "")
+      .split(",")
+      .map((t) => t.trim().toLowerCase())
+      .filter(Boolean)
+      .slice(0, 20);
+    await db.user.update({ where: { id: z.string().max(40).parse(userId) }, data: { tags: [...new Set(tags)] } });
+    await audit({ actorId, action: "customer.tags", entityType: "User", entityId: userId, data: { tags } });
+    revalidatePath(`/admin/customers/${userId}`);
+    return { ok: true, message: "Tags saved." };
+  });
+}
+
+// ── Reviews & questions ──
+
+export async function moderateReviewAction(reviewId: string, decision: "APPROVED" | "REJECTED" | "DELETE"): Promise<AdminResult> {
+  return guarded("reviews.moderate", async (actorId) => {
+    const id = z.string().max(40).parse(reviewId);
+    const d = z.enum(["APPROVED", "REJECTED", "DELETE"]).parse(decision);
+    const review = await db.review.findUnique({ where: { id }, select: { productId: true } });
+    if (!review) return { ok: false, error: "Review not found." };
+    if (d === "DELETE") await db.review.delete({ where: { id } });
+    else await db.review.update({ where: { id }, data: { status: d } });
+    const { recomputeRating } = await import("@/server/catalog/sync");
+    await recomputeRating(review.productId);
+    await audit({ actorId, action: `review.${d.toLowerCase()}`, entityType: "Review", entityId: id });
+    revalidatePath("/admin/reviews");
+    return { ok: true, message: d === "DELETE" ? "Review deleted." : `Review ${d.toLowerCase()}.` };
+  });
+}
+
+export async function answerQuestionAction(questionId: string, data: Record<string, unknown>): Promise<AdminResult> {
+  return guarded("reviews.moderate", async (actorId) => {
+    const id = z.string().max(40).parse(questionId);
+    if (data.reject === true) {
+      await db.productQuestion.update({ where: { id }, data: { status: "REJECTED" } });
+      revalidatePath("/admin/reviews");
+      return { ok: true, message: "Question hidden." };
+    }
+    const answer = z.string().trim().min(2, "Write an answer").max(2000).parse(data.answer);
+    const user = await db.user.findUnique({ where: { id: actorId }, select: { name: true } });
+    await db.productQuestion.update({ where: { id }, data: { answer, status: "APPROVED", answeredBy: user?.name ?? "The Otaku Bazaar", answeredAt: new Date() } });
+    await audit({ actorId, action: "question.answer", entityType: "ProductQuestion", entityId: id });
+    revalidatePath("/admin/reviews");
+    return { ok: true, message: "Answer published on the product page." };
+  });
+}
+
+// ── Newsletter ──
+
+export async function unsubscribeAction(id: string): Promise<AdminResult> {
+  return guarded("marketing.write", async (actorId) => {
+    await db.newsletterSubscriber.update({ where: { id: z.string().max(40).parse(id) }, data: { unsubscribedAt: new Date() } });
+    await audit({ actorId, action: "newsletter.unsubscribe", entityType: "NewsletterSubscriber", entityId: id });
+    revalidatePath("/admin/newsletter");
+    return { ok: true, message: "Unsubscribed." };
+  });
+}

@@ -55,3 +55,12 @@ export async function syncProductAggregates(productId: string, tx: Tx | typeof d
     },
   });
 }
+
+/** Recomputes a product's average rating and count from approved reviews. */
+export async function recomputeRating(productId: string, tx: Tx | typeof db = db) {
+  const agg = await tx.review.aggregate({ where: { productId, status: "APPROVED" }, _avg: { rating: true }, _count: true });
+  await tx.product.update({
+    where: { id: productId },
+    data: { ratingAvg: Math.round((agg._avg.rating ?? 0) * 10) / 10, ratingCount: agg._count },
+  });
+}

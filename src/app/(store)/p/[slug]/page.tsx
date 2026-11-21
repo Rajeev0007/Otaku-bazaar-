@@ -17,6 +17,7 @@ import { RecentlyViewed, RecordView } from "@/components/store/recently-viewed";
 import { AskQuestion, ShareButton } from "@/components/store/product-extras";
 import { ProductImage } from "@/components/store/product-image";
 import { Markdown } from "@/lib/markdown";
+import { formatMoney } from "@/lib/money";
 import { breadcrumbJsonLd, JsonLd, productJsonLd } from "@/lib/seo";
 import { appUrl, cn } from "@/lib/utils";
 
@@ -154,7 +155,7 @@ export default async function ProductPage({ params, searchParams }: Props) {
             </div>
 
             <ul className="mt-6 grid gap-3 text-sm sm:grid-cols-2">
-              <Perk icon="truck" title={`Free shipping over ₹${Math.round(settings.freeShippingThreshold / 100)}`} body="Tracked delivery across India" />
+              <Perk icon="truck" title={settings.freeShippingThreshold > 0 ? `Free shipping over ${formatMoney(settings.freeShippingThreshold, settings.baseCurrency)}` : "Tracked delivery"} body="Tracked delivery across India" />
               <Perk icon="refresh" title={product.returnable && returnDays > 0 ? `${returnDays}-day returns` : "Non-returnable"} body={product.returnable && returnDays > 0 ? "On unused items with tags" : "Final sale. Defects are always covered."} href="/pages/returns-policy" />
               <Perk icon="shield" title="Secure checkout" body="Payments via trusted gateways" />
               <Perk icon="sparkles" title="Quality checked" body={product.authenticity && !product.authenticity.startsWith("[") ? product.authenticity : "Inspected before dispatch"} />

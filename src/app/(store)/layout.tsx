@@ -5,8 +5,17 @@ import { ShopperProvider } from "@/components/store/shopper-context";
 import { getShopperSummary } from "@/server/shopper";
 import { getStoreSettings } from "@/server/settings";
 import { getCurrentUser } from "@/server/auth/session";
+import { redirect } from "next/navigation";
+import { getSetupState } from "@/server/setup";
+
+// Every storefront page depends on the visitor (cart, session) and on setup state, so never prerender.
+export const dynamic = "force-dynamic";
 
 export default async function StoreLayout({ children }: { children: React.ReactNode }) {
+  // Fresh deployment: send everyone to /setup until the tables and the owner account exist.
+  const setup = await getSetupState();
+  if (setup.database !== "ok" || !setup.roles || !setup.owner) redirect("/setup");
+
   const [shopper, settings, user] = await Promise.all([getShopperSummary(), getStoreSettings(), getCurrentUser()]);
 
   // Maintenance mode: staff can still browse to check the store.

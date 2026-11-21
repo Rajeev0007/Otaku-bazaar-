@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/server/auth/session";
+import { getIntegrations } from "@/server/integrations";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { GoogleButton, LoginForm } from "@/components/auth/auth-forms";
 import { FormError } from "@/components/ui/field";
@@ -33,7 +34,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       }
     >
       <FormError message={sp.error ? OAUTH_ERRORS[sp.error] : null} />
-      <GoogleButton next={next} enabled={!!process.env.GOOGLE_CLIENT_ID} />
+      <GoogleButton next={next} enabled={!!(await getIntegrations()).googleClientId} />
       <LoginForm next={next} />
     </AuthShell>
   );

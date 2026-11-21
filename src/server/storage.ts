@@ -61,8 +61,11 @@ export async function storeImage(file: File, folder = "products"): Promise<{ url
     );
     return { url: `https://${storage.host}/${key}`, bytes: buf.length, type: kind.type };
   }
-  if (process.env.NODE_ENV === "production") {
-    throw new UploadError("Image storage is not set up. In Vercel, open Storage → Create → Blob and connect it to this project, then redeploy.");
+  // No Blob/S3 connected: store in the database (works out of the box; connect Vercel Blob for big catalogs).
+  if (process.env.NODE_ENV === "production" || process.env.MEDIA_IN_DB === "true") {
+    const { db } = await import("@/server/db");
+    const row = await db.mediaFile.create({ data: { contentType: kind.type, size: buf.length, bytes: buf } });
+    return { url: `/media/${row.id}`, bytes: buf.length, type: kind.type };
   }
   // Development fallback: local disk under public/uploads (git-ignored).
   const dest = path.join(process.cwd(), "public", "uploads", key);

@@ -6,6 +6,7 @@ import { Breadcrumbs } from "@/components/ui/misc";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { ChangePasswordForm, LogoutButton, ProfileForm, ResendVerification, SignOutOthers } from "@/components/account/account-forms";
 import { FormSuccess } from "@/components/ui/field";
+import { RecentlyViewed } from "@/components/store/recently-viewed";
 
 export const metadata: Metadata = { title: "My account", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -49,7 +50,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
         <Tile href="/wishlist" icon="heart" title="Wishlist" body={`${wishlistCount} saved item${wishlistCount === 1 ? "" : "s"}`} />
         <Tile href="/cart" icon="bag" title="Cart" body="Review saved items" />
         <Tile icon="package" title="Orders" body="Order history arrives with checkout" />
-        <Tile href="/shop?sort=trending" icon="history" title="Recently viewed" body={`${recent} product${recent === 1 ? "" : "s"}`} />
+        <Tile href="#recent" icon="history" title="Recently viewed" body={`${recent} product${recent === 1 ? "" : "s"}`} />
       </div>
 
       <div className="mt-10 grid gap-6 lg:grid-cols-2">
@@ -82,6 +83,9 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
             ))}
           </ul>
         </section>
+      </div>
+      <div id="recent" className="-mx-4 scroll-mt-24 sm:-mx-6 xl:-mx-10">
+        <RecentlyViewed title="Recently viewed" />
       </div>
     </div>
   );

@@ -7,7 +7,7 @@ import { Icon } from "@/components/ui/icon";
 
 export async function Footer() {
   const [s, nav] = await Promise.all([getStoreSettings(), getNavigation()]);
-  const social = Object.entries(s.social).filter(([, url]) => !!url);
+  const social = SOCIAL_LABELS.filter(([k]) => !!s.social[k]).map(([k, label]) => [label, socialHref(k, s.social[k])] as const);
   const year = new Date().getFullYear();
   return (
     <footer className="mt-16 border-t border-line bg-surface pb-24 md:pb-0">
@@ -23,9 +23,9 @@ export async function Footer() {
             <NewsletterForm source="footer" compact />
           </div>
           {social.length > 0 && (
-            <div className="mt-6 flex gap-3 text-sm text-muted">
+            <div className="mt-6 flex flex-wrap gap-2 text-xs text-muted">
               {social.map(([name, url]) => (
-                <a key={name} href={url} target="_blank" rel="noopener noreferrer" className="capitalize hover:text-fg">
+                <a key={name} href={url} target="_blank" rel="noopener noreferrer" className="rounded-full border border-line px-3 py-1.5 hover:border-fg hover:text-fg">
                   {name}
                 </a>
               ))}
@@ -61,16 +61,68 @@ export async function Footer() {
       )}
       <div className="border-t border-line">
         <div className="container-page flex flex-col gap-3 py-6 text-xs text-subtle sm:flex-row sm:items-center sm:justify-between">
-          <p>© {year} {s.business.legalName || s.name}. All rights reserved.</p>
+          <p>
+            © {year} {s.business.legalName || s.name}. All rights reserved.
+            {s.business.ownerName && <> · Owned by <span className="text-muted">{s.business.ownerName}</span></>}
+          </p>
           <div className="flex flex-wrap items-center gap-4">
             <span className="flex items-center gap-1.5"><Icon name="shield" size={14} /> Secure payments</span>
             <span className="flex items-center gap-1.5"><Icon name="truck" size={14} /> Ships across India</span>
-            <span>Support: {s.support.email} · {s.support.hours}</span>
+            {(s.support.email || s.support.phone) && (
+              <span>
+                Support: {[s.support.email, s.support.phone].filter(Boolean).join(" · ")}
+                {s.support.hours && ` (${s.support.hours})`}
+              </span>
+            )}
+            {/* Developer credit. Required by the LICENSE; do not remove without the developer's written permission. */}
+            <a href="https://github.com/Rajeev0007" target="_blank" rel="noopener noreferrer" className="font-medium text-muted hover:text-fg">
+              Made by Rajeev
+            </a>
           </div>
         </div>
       </div>
     </footer>
   );
+}
+
+const SOCIAL_LABELS = [
+  ["instagram", "Instagram"],
+  ["youtube", "YouTube"],
+  ["facebook", "Facebook"],
+  ["x", "X"],
+  ["threads", "Threads"],
+  ["discord", "Discord"],
+  ["telegram", "Telegram"],
+  ["whatsapp", "WhatsApp"],
+  ["pinterest", "Pinterest"],
+  ["linkedin", "LinkedIn"],
+] as const;
+
+/** Accepts full URLs, or plain handles / phone numbers, and turns them into links. */
+function socialHref(kind: (typeof SOCIAL_LABELS)[number][0], v: string) {
+  const val = v.trim();
+  if (/^https?:\/\//i.test(val)) return val;
+  const h = val.replace(/^@/, "");
+  switch (kind) {
+    case "whatsapp":
+      return `https://wa.me/${h.replace(/[^0-9]/g, "")}`;
+    case "instagram":
+      return `https://instagram.com/${h}`;
+    case "x":
+      return `https://x.com/${h}`;
+    case "youtube":
+      return `https://youtube.com/@${h}`;
+    case "threads":
+      return `https://threads.net/@${h}`;
+    case "telegram":
+      return `https://t.me/${h}`;
+    case "facebook":
+      return `https://facebook.com/${h}`;
+    case "pinterest":
+      return `https://pinterest.com/${h}`;
+    default:
+      return `https://${h}`;
+  }
 }
 
 function FooterCol({ title, links }: { title: string; links: [string, string][] }) {

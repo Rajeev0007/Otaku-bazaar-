@@ -6,8 +6,9 @@ import { formatMoney } from "@/lib/money";
 import { Card, PageHeader, Stat, Table } from "@/components/admin/ui";
 import { getSetupStatus } from "@/server/admin/setup-status";
 
-export default async function AdminDashboard() {
+export default async function AdminDashboard({ searchParams }: { searchParams: Promise<{ welcome?: string }> }) {
   await requireStaff("dashboard.view", "/admin");
+  const welcome = (await searchParams).welcome === "owner";
   const since30 = new Date(Date.now() - 30 * 86_400_000);
   const paid = { paymentStatus: { in: ["CAPTURED", "PARTIALLY_REFUNDED"] as ("CAPTURED" | "PARTIALLY_REFUNDED")[] } };
   const [revenue, orderCount, customers, newCustomers, activeProducts, outOfStock, low, subscribers, activity, topViewed, pendingQuestions, carts] = await Promise.all([
@@ -31,6 +32,12 @@ export default async function AdminDashboard() {
   return (
     <>
       <PageHeader title="Dashboard" description="Last 30 days unless noted." />
+      {welcome && (
+        <div className="mb-6 rounded-2xl border border-success/30 bg-success/10 p-5 text-sm">
+          <p className="font-semibold text-success">Welcome, your store is live.</p>
+          <p className="mt-1 text-muted">Everything is managed from here: products, homepage, pages, customers, integrations and settings. Work through the launch checklist below.</p>
+        </div>
+      )}
       {pending.length > 0 && (
         <details className="mb-6 rounded-2xl border border-warning/30 bg-warning/5 p-5" open={pending.length > 3}>
           <summary className="cursor-pointer font-semibold">

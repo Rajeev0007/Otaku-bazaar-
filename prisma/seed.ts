@@ -7,7 +7,8 @@
  * Safe to re-run: everything is upserted by a natural key and existing rows are never overwritten,
  * so edits made in the admin survive (except role permissions, which are reset to the defaults below).
  */
-import { PrismaClient, ProductKind, InventoryReason } from "@prisma/client";
+import { ProductKind, InventoryReason } from "@prisma/client";
+import { db } from "../src/server/db";
 import { DEFAULT_ROLES, PERMISSIONS } from "../src/server/auth/permissions";
 import { hashPassword } from "../src/server/security/crypto";
 import { buildSearchText } from "../src/server/catalog/sync";
@@ -15,7 +16,6 @@ import { demoArtUrl, type ArtKind } from "../src/lib/demo-art";
 import { discountPercent } from "../src/lib/money";
 import { POLICY_PAGES } from "./seed-pages";
 
-const db = new PrismaClient();
 
 // Deterministic PRNG so every seed run produces the same catalog.
 let s = 20261120;
@@ -251,7 +251,7 @@ async function upsertProduct(input: {
   return product;
 }
 
-async function seedProducts() {
+export async function seedProducts() {
   const now = Date.now();
   let n = 0;
   const brands = ["otaku-bazaar-originals", "collectors-studio"];
@@ -291,7 +291,7 @@ async function seedProducts() {
   console.log(`  products: ${await db.product.count()}, variants: ${await db.productVariant.count()}`);
 }
 
-async function seedCollections() {
+export async function seedCollections() {
   const cols = [
     { slug: "limited-drops", name: "Limited Drops", description: "Small-batch releases. Once they're gone, they're gone.", where: { isLimited: true } },
     { slug: "gifts-under-999", name: "Gifts under ₹999", description: "Thoughtful picks for every fan, all under ₹999.", where: { minPrice: { lte: 99_900 }, inStock: true } },
@@ -310,7 +310,7 @@ async function seedCollections() {
   }
 }
 
-async function syncAggregates() {
+export async function syncAggregates() {
   const products = await db.product.findMany({ include: { category: true, franchise: true, brand: true, variants: { include: { inventory: true } } } });
   for (const p of products) {
     const prices = p.variants.map((v) => v.price);
@@ -432,9 +432,12 @@ async function main() {
   console.log("Done.");
 }
 
-main()
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
-  })
-  .finally(() => db.$disconnect());
+// Run only when executed directly (npx tsx prisma/seed.ts), not when imported by the admin.
+if (process.argv[1] && /seed\.ts$/.test(process.argv[1])) {
+  main()
+    .catch((e) => {
+      console.error(e);
+      process.exit(1);
+    })
+    .finally(() => db.$disconnect());
+}

@@ -23,7 +23,7 @@ export async function startSession(userId: string) {
   jar.set(SESSION_COOKIE, token, { httpOnly: true, secure, sameSite: "lax", path: "/", expires: expiresAt });
 
   // Guest cart follows the shopper into their account.
-  const guestToken = guestCartTokenFromCookie(jar.get(GUEST_CART_COOKIE)?.value);
+  const guestToken = await guestCartTokenFromCookie(jar.get(GUEST_CART_COOKIE)?.value);
   if (guestToken) {
     await mergeGuestCartIntoUser(guestToken, userId);
     jar.delete(GUEST_CART_COOKIE);

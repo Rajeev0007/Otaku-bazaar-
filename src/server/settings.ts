@@ -28,23 +28,31 @@ export const storeSettingsSchema = z.object({
     ]),
   support: z
     .object({
-      email: z.string().default("[support email]"),
-      phone: z.string().default("[support phone]"),
+      email: z.string().default(""),
+      phone: z.string().default(""),
+      whatsapp: z.string().default(""),
       hours: z.string().default("Mon–Sat, 10:00–19:00 IST"),
     })
     .default({}),
   social: z
     .object({
       instagram: z.string().default(""),
+      facebook: z.string().default(""),
       youtube: z.string().default(""),
       x: z.string().default(""),
+      threads: z.string().default(""),
       discord: z.string().default(""),
+      telegram: z.string().default(""),
+      whatsapp: z.string().default(""),
+      pinterest: z.string().default(""),
+      linkedin: z.string().default(""),
     })
     .default({}),
   // Business identity. India's Consumer Protection (E-Commerce) Rules require the legal name, address,
   // customer care contact and a grievance officer to be displayed on the platform.
   business: z
     .object({
+      ownerName: z.string().default("Satyam Behera"),
       legalName: z.string().default(""),
       address: z.string().default(""),
       gstin: z.string().default(""),

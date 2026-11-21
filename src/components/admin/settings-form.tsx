@@ -8,6 +8,19 @@ import { Checkbox, Field, FormError, Input, Textarea } from "@/components/ui/fie
 import { useToast } from "@/components/ui/toast";
 import { saveSettingsAction } from "@/app/admin/actions";
 
+const SOCIALS = [
+  ["instagram", "Instagram", "@theotakubazaar"],
+  ["youtube", "YouTube", "@channel"],
+  ["facebook", "Facebook", "page name or link"],
+  ["x", "X (Twitter)", "@handle"],
+  ["threads", "Threads", "@handle"],
+  ["discord", "Discord invite", "https://discord.gg/…"],
+  ["telegram", "Telegram", "channel name"],
+  ["whatsapp", "WhatsApp channel/number", "+91… or link"],
+  ["pinterest", "Pinterest", "profile"],
+  ["linkedin", "LinkedIn", "https://linkedin.com/…"],
+] as const;
+
 const rupees = (paise: number) => String(paise / 100);
 const paise = (r: string) => Math.round(Number(r || 0) * 100);
 
@@ -27,10 +40,9 @@ export function SettingsForm({ initial }: { initial: StoreSettings }) {
     supportEmail: initial.support.email,
     supportPhone: initial.support.phone,
     supportHours: initial.support.hours,
-    instagram: initial.social.instagram,
-    youtube: initial.social.youtube,
-    x: initial.social.x,
-    discord: initial.social.discord,
+    supportWhatsapp: initial.support.whatsapp,
+    ...initial.social,
+    ownerName: initial.business.ownerName,
     legalName: initial.business.legalName,
     address: initial.business.address,
     gstin: initial.business.gstin,
@@ -71,9 +83,9 @@ export function SettingsForm({ initial }: { initial: StoreSettings }) {
         taxInclusive: s.taxInclusive,
         taxRateBps: Math.round(Number(s.taxRate) * 100),
         taxLabel: s.taxLabel,
-        support: { email: s.supportEmail, phone: s.supportPhone, hours: s.supportHours },
-        social: { instagram: s.instagram, youtube: s.youtube, x: s.x, discord: s.discord },
-        business: { legalName: s.legalName, address: s.address, gstin: s.gstin, cin: s.cin },
+        support: { email: s.supportEmail, phone: s.supportPhone, hours: s.supportHours, whatsapp: s.supportWhatsapp },
+        social: Object.fromEntries(SOCIALS.map(([k]) => [k, s[k]])),
+        business: { ownerName: s.ownerName, legalName: s.legalName, address: s.address, gstin: s.gstin, cin: s.cin },
         grievanceOfficer: { name: s.goName, designation: s.goDesignation, email: s.goEmail, phone: s.goPhone },
         maintenanceMode: s.maintenanceMode,
         maintenanceMessage: s.maintenanceMessage,
@@ -122,18 +134,23 @@ export function SettingsForm({ initial }: { initial: StoreSettings }) {
         <h2 className="font-semibold">Support</h2>
         <Field label="Support email" htmlFor="se"><Input id="se" value={s.supportEmail} onChange={set("supportEmail")} /></Field>
         <Field label="Support phone" htmlFor="sp"><Input id="sp" value={s.supportPhone} onChange={set("supportPhone")} /></Field>
+        <Field label="Support WhatsApp number" htmlFor="sw"><Input id="sw" value={s.supportWhatsapp} onChange={set("supportWhatsapp")} placeholder="+91 98765 43210" /></Field>
         <Field label="Support hours" htmlFor="sh"><Input id="sh" value={s.supportHours} onChange={set("supportHours")} /></Field>
       </section>
       <section className={box}>
         <h2 className="font-semibold">Social links</h2>
-        {(["instagram", "youtube", "x", "discord"] as const).map((k) => (
-          <Field key={k} label={k === "x" ? "X (Twitter)" : k[0]!.toUpperCase() + k.slice(1)} htmlFor={k}>
-            <Input id={k} value={s[k]} onChange={set(k)} placeholder="https://" />
-          </Field>
-        ))}
+        <p className="text-xs text-muted">Paste a full link or just the handle (e.g. @theotakubazaar). Empty ones are hidden from the footer.</p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {SOCIALS.map(([k, label, ph]) => (
+            <Field key={k} label={label} htmlFor={`social-${k}`}>
+              <Input id={`social-${k}`} value={s[k]} onChange={set(k)} placeholder={ph} />
+            </Field>
+          ))}
+        </div>
       </section>
       <section className={box}>
         <h2 className="font-semibold">Business details</h2>
+        <Field label="Store owner" htmlFor="ownerName" hint="Shown in the footer as “Owned by …”."><Input id="ownerName" value={s.ownerName} onChange={set("ownerName")} /></Field>
         <p className="text-xs text-muted">Shown in the footer. Indian e-commerce rules require your legal name and address to be displayed. Leave blank until registered.</p>
         <Field label="Legal business name" htmlFor="legalName"><Input id="legalName" value={s.legalName} onChange={set("legalName")} placeholder="e.g. Otaku Bazaar Private Limited" /></Field>
         <Field label="Registered address" htmlFor="address"><Input id="address" value={s.address} onChange={set("address")} /></Field>

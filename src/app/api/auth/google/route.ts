@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { getAuthSecret } from "@/server/secrets";
+import { getIntegrations } from "@/server/integrations";
 import { createHash } from "node:crypto";
 import { randomToken, sign } from "@/server/security/crypto";
 import { appUrl, safeRedirectPath } from "@/lib/utils";
@@ -8,7 +10,7 @@ const OAUTH_COOKIE = "ob_oauth";
 
 // Starts the Google OAuth 2.0 authorization-code flow with PKCE and a signed state cookie.
 export async function GET(req: Request) {
-  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const clientId = (await getIntegrations()).googleClientId;
   if (!clientId) return NextResponse.redirect(appUrl("/login?error=oauth"));
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
   if (!(await rateLimit(`oauth:${ip}`, 30, 600)).ok) return NextResponse.redirect(appUrl("/login?error=oauth"));
@@ -31,7 +33,7 @@ export async function GET(req: Request) {
   }).toString();
 
   const res = NextResponse.redirect(url);
-  res.cookies.set(OAUTH_COOKIE, sign(JSON.stringify({ state, verifier, next })), {
+  res.cookies.set(OAUTH_COOKIE, sign(JSON.stringify({ state, verifier, next }), await getAuthSecret()), {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",

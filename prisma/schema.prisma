@@ -1348,3 +1348,13 @@ model AnalyticsEvent {
   @@index([name, createdAt])
   @@index([productId, name])
 }
+
+// Image storage fallback when no Vercel Blob / S3 bucket is connected. Served from /media/{id}.
+model MediaFile {
+  id          String   @id @default(cuid())
+  contentType String
+  size        Int
+  bytes       Bytes
+  uploadedBy  String?
+  createdAt   DateTime @default(now())
+}
