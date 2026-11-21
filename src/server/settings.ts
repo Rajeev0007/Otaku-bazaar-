@@ -1,6 +1,7 @@
 import { cache } from "react";
 import { z } from "zod";
 import { db } from "@/server/db";
+import { THEME_IDS } from "@/lib/themes";
 
 // Store-wide settings live in the Setting table under the "store" key and are editable in admin.
 // Defaults keep the store usable before anything is configured.
@@ -88,6 +89,13 @@ export const storeSettingsSchema = z.object({
       designation: z.string().default("Grievance Officer"),
       email: z.string().default(""),
       phone: z.string().default(""),
+    })
+    .default({}),
+  appearance: z
+    .object({
+      theme: z.enum(THEME_IDS).default("classic"),
+      shopperChoice: z.boolean().default(true), // shoppers can pick their own theme from the header
+      wallpapers: z.boolean().default(true), // animated backgrounds on anime themes
     })
     .default({}),
   maintenanceMode: z.boolean().default(false),

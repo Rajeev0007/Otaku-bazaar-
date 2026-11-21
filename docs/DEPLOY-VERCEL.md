@@ -73,6 +73,10 @@ Use **Duplicate** on an existing product to add similar items quickly.
 - **Shiprocket (optional):** Admin → Integrations → Shipping. Paste your Shiprocket API user and pickup location name, and add the webhook URL and token shown there in Shiprocket. Each order then gets a **Book courier & ship** button that books the courier, prints the label and keeps tracking updated automatically. Without Shiprocket, type the courier and tracking number on the order page.
 - **Returns:** customers request returns, exchanges or replacements from their order page after delivery (within each product's return window). Handle them in Admin → **Returns**: approve → item received (restock) → refund or send the exchange. Prepaid orders are refunded through Razorpay; for cash-on-delivery orders you send the money by UPI/bank and record it.
 
+## Change the look (anime themes)
+
+Admin → Store settings → **Appearance & anime themes**. Pick a default: Classic dark, Classic light, Shinobi Sunset (ninja orange, falling leaves), Cursed Energy (violet flames), Sakura Night (cherry blossoms), Neo Tokyo (neon rain) or Manga Ink (comic panels). Click **Preview** to see one before saving. You can also let shoppers choose their own theme from the palette button in the header, and switch the animated backgrounds on or off. All artwork is drawn in code (no character images), so it's safe to use commercially.
+
 ## Customer care, rewards and analytics
 
 - **Help page:** customers write to you from `/support` (also the round help button on every page). Messages arrive in Admin → **Support tickets**; your reply is emailed to them. Add common questions in Admin → **FAQs**.

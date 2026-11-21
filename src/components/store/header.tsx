@@ -11,6 +11,8 @@ export async function Header() {
       <HeaderClient
         storeName={settings.name}
         logoUrl={settings.logoUrl}
+        themePicker={settings.appearance.shopperChoice}
+        wallpapers={settings.appearance.wallpapers}
         categories={nav.categories}
         franchises={nav.franchises}
         featured={trending.map((p) => ({ slug: p.slug, name: p.name, image: p.images[0]?.url ?? null, price: p.minPrice, currency: p.currency }))}

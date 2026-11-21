@@ -115,7 +115,7 @@ const SHAPES: Record<Exclude<ArtKind, "banner">, (fill: string, accent: string, 
 export function renderDemoArt(opts: { kind: string; color?: string; label?: string; mark?: string; variant?: number }): string {
   const kind = (ART_KINDS as readonly string[]).includes(opts.kind) ? (opts.kind as ArtKind) : "gift";
   const accent = /^#[0-9a-fA-F]{6}$/.test(opts.color ?? "") ? opts.color! : "#f0506e";
-  const label = esc((opts.label ?? "").slice(0, 40));
+  const label = esc((opts.label ?? "").slice(0, 40).toUpperCase()); // uppercase BEFORE escaping, or &amp; becomes an invalid &AMP;
   const mark = esc((opts.mark ?? "OB").slice(0, 4).toUpperCase());
   const v = Math.max(1, Math.min(3, opts.variant ?? 1));
   const seed = hash(`${kind}${accent}${label}${v}`);
@@ -143,7 +143,7 @@ export function renderDemoArt(opts: { kind: string; color?: string; label?: stri
 <rect width="800" height="1000" fill="url(#glow)"/>
 <text x="${v === 3 ? 60 : 740}" y="${v === 3 ? 330 : 960}" text-anchor="${v === 3 ? "start" : "end"}" font-size="300" font-weight="900" fill="#fff" opacity=".035">${mark}</text>
 <g transform="${v === 2 ? "translate(-200 -200) scale(1.5)" : v === 3 ? "translate(40 30) scale(0.92)" : ""}">${SHAPES[kind](fill, ink, mark)}</g>
-<text x="40" y="950" font-size="22" letter-spacing="6" fill="#fff" opacity=".5">${label.toUpperCase()}</text>
+<text x="40" y="950" font-size="22" letter-spacing="6" fill="#fff" opacity=".5">${label}</text>
 <text x="760" y="60" text-anchor="end" font-size="16" letter-spacing="4" fill="#fff" opacity=".35">DEMO IMAGE</text>
 </svg>`;
 }
