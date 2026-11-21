@@ -18,6 +18,8 @@ jobs:
           } > out.txt 2>&1
           cat out.txt
       - uses: actions/upload-artifact@v4
-        with: { name: out, path: |
+        with:
+          name: out
+          path: |
             out.txt
-            package-lock.json }
+            package-lock.json
