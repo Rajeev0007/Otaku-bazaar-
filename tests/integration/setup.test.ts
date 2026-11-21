@@ -46,7 +46,13 @@ describe("secrets without environment variables", () => {
   it("detects a changed secret instead of returning garbage", async () => {
     const enc = await encryptSecret("hello");
     expect(await decryptSecret(enc)).toBe("hello");
-    expect(await decryptSecret(enc.replace(/.$/, (c) => (c === "A" ? "B" : "A")))).toBeNull();
+    // Flip one byte of the auth tag: decryption must fail, not return wrong text.
+    const parts = enc.split(".");
+    const tag = Buffer.from(parts[2]!, "base64url");
+    tag[0] = tag[0]! ^ 0xff;
+    parts[2] = tag.toString("base64url");
+    expect(await decryptSecret(parts.join("."))).toBeNull();
+    expect(await decryptSecret("garbage")).toBeNull();
   });
 });
 
