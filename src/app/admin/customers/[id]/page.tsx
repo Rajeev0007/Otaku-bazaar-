@@ -7,7 +7,8 @@ import { Card, PageHeader, StatusPill } from "@/components/admin/ui";
 import { SimpleForm } from "@/components/admin/simple-form";
 import { Input } from "@/components/ui/field";
 import { CustomerStatusControl } from "@/components/admin/customer-status";
-import { setCustomerTagsAction } from "@/app/admin/actions";
+import { adjustPointsAction, setCustomerTagsAction } from "@/app/admin/actions";
+import { pointsBalance } from "@/server/rewards/service";
 
 export default async function CustomerDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -26,6 +27,7 @@ export default async function CustomerDetail({ params }: { params: Promise<{ id:
   });
   if (!u) notFound();
   const history = await db.auditLog.findMany({ where: { entityType: "User", entityId: id }, orderBy: { createdAt: "desc" }, take: 10, include: { actor: { select: { email: true } } } });
+  const [points, pointHistory] = await Promise.all([pointsBalance(u.id), db.loyaltyTransaction.findMany({ where: { userId: u.id }, orderBy: { createdAt: "desc" }, take: 8 })]);
   const ltv = u.orders.reduce((n, o) => n + o.grandTotal, 0);
   const writable = can(staff, "customers.write");
   const cart = u.carts[0];
@@ -113,6 +115,19 @@ export default async function CustomerDetail({ params }: { params: Promise<{ id:
               <CustomerStatusControl userId={u.id} status={u.status} />
             </Card>
           )}
+          <Card title={`Reward points · ${points}`}>
+            {pointHistory.length > 0 && (
+              <ul className="mb-3 space-y-1 text-xs text-muted">
+                {pointHistory.map((p) => <li key={p.id} className="flex justify-between"><span>{p.reason.toLowerCase().replace("_", " ")} · {p.createdAt.toLocaleDateString("en-IN")}</span><span className={p.points > 0 ? "text-success" : ""}>{p.points > 0 ? "+" : ""}{p.points}</span></li>)}
+              </ul>
+            )}
+            {writable && (
+              <SimpleForm action={adjustPointsAction.bind(null, u.id)} submitLabel="Adjust points" className="grid grid-cols-2 gap-2" resetOnSuccess>
+                <Input name="points" type="number" placeholder="+50 / -20" aria-label="Points" />
+                <Input name="note" placeholder="Reason" aria-label="Reason" />
+              </SimpleForm>
+            )}
+          </Card>
           <Card title="Tags" description="Internal labels, e.g. vip, wholesale, fraud-check.">
             {writable ? (
               <SimpleForm action={setCustomerTagsAction.bind(null, u.id)}>

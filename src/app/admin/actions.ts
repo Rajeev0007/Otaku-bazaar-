@@ -15,6 +15,12 @@ import type { Permission } from "@/server/auth/permissions";
 
 export type AdminResult<T = undefined> = { ok: true; message?: string; data?: T } | { ok: false; error: string; fieldErrors?: Record<string, string> };
 
+/** Fire-and-forget back-in-stock emails after anything that may add stock. */
+async function afterStockChange() {
+  const { sendDueStockAlerts } = await import("@/server/inventory/alerts");
+  await sendDueStockAlerts().catch((e) => console.error("[stock alerts]", e));
+}
+
 async function guarded<T>(permission: Permission, fn: (actorId: string) => Promise<AdminResult<T>>): Promise<AdminResult<T>> {
   try {
     const user = await assertPermission(permission);
@@ -33,6 +39,7 @@ async function guarded<T>(permission: Permission, fn: (actorId: string) => Promi
 export async function saveProductAction(productId: string | null, payload: unknown): Promise<AdminResult<{ id: string; slug: string }>> {
   return guarded("products.write", async (actorId) => {
     const p = await saveProduct(payload, actorId, productId ?? undefined);
+    await afterStockChange();
     revalidatePath("/admin/products");
     revalidatePath(`/p/${p.slug}`);
     return { ok: true, message: productId ? "Product saved." : "Product created.", data: { id: p.id, slug: p.slug } };
@@ -73,6 +80,7 @@ export async function adjustStockAction(raw: unknown): Promise<AdminResult<{ onH
         ? await setStock(input.variantId, input.quantity, actorId, input.note)
         : await adjustStock({ variantId: input.variantId, delta: input.quantity, reason: input.reason, note: input.note, actorId });
     await audit({ actorId, action: "inventory.adjust", entityType: "ProductVariant", entityId: input.variantId, data: { ...input, onHandAfter: onHand } });
+    await afterStockChange();
     revalidatePath("/admin/inventory");
     return { ok: true, message: `Stock updated to ${onHand}.`, data: { onHand } };
   });
@@ -468,6 +476,7 @@ export async function adminCancelOrderAction(orderId: string, data: Record<strin
     try {
       const r = await cancelOrder(z.string().max(40).parse(orderId), { reason, actorId });
       await audit({ actorId, action: "order.cancel", entityType: "Order", entityId: orderId, data: { reason } });
+    await afterStockChange();
       revalidatePath(`/admin/orders/${orderId}`);
       return { ok: true, message: r.refundId ? "Cancelled, stock returned and a full refund started." : "Cancelled and stock returned." };
     } catch (err) {
@@ -582,6 +591,7 @@ export async function updateReturnAction(returnId: string, data: Record<string, 
       if (err instanceof ReturnError) return { ok: false, error: err.message };
       throw err;
     }
+    await afterStockChange();
     revalidatePath("/admin/returns");
     return { ok: true, message: "Return updated. The customer has been emailed." };
   });
@@ -615,5 +625,111 @@ export async function refreshTrackingAction(orderId: string): Promise<AdminResul
       if (err instanceof ShippingError) return { ok: false, error: err.message };
       throw err;
     }
+  });
+}
+
+// ── Gift cards & loyalty ──
+
+export async function issueGiftCardAction(raw: unknown): Promise<AdminResult<{ code: string }>> {
+  return guarded("marketing.write", async (actorId) => {
+    const { issueGiftCard, RewardError } = await import("@/server/rewards/service");
+    const i = z
+      .object({
+        amount: z.coerce.number().min(1).max(100_000),
+        recipientEmail: z.union([z.literal(""), z.string().trim().email()]).optional(),
+        senderName: z.string().trim().max(80).optional(),
+        message: z.string().trim().max(300).optional(),
+        expiresAt: z.union([z.literal(""), z.coerce.date()]).optional(),
+      })
+      .parse(raw);
+    try {
+      const { giftCard, code } = await issueGiftCard({ amount: Math.round(i.amount * 100), recipientEmail: i.recipientEmail || null, senderName: i.senderName || null, message: i.message || null, expiresAt: i.expiresAt instanceof Date ? i.expiresAt : null, actorId });
+      await audit({ actorId, action: "giftcard.issue", entityType: "GiftCard", entityId: giftCard.id, data: { amount: giftCard.initialValue, last4: giftCard.last4, to: giftCard.recipientEmail } });
+      revalidatePath("/admin/gift-cards");
+      return { ok: true, message: giftCard.recipientEmail ? `Gift card emailed to ${giftCard.recipientEmail}.` : "Gift card created. Copy the code now; it won't be shown again.", data: { code } };
+    } catch (err) {
+      if (err instanceof RewardError) return { ok: false, error: err.message };
+      throw err;
+    }
+  });
+}
+
+export async function setGiftCardActiveAction(id: string, active: boolean): Promise<AdminResult> {
+  return guarded("marketing.write", async (actorId) => {
+    await db.giftCard.update({ where: { id: z.string().max(40).parse(id) }, data: { isActive: active } });
+    await audit({ actorId, action: active ? "giftcard.enable" : "giftcard.disable", entityType: "GiftCard", entityId: id });
+    revalidatePath("/admin/gift-cards");
+    return { ok: true, message: active ? "Gift card enabled." : "Gift card disabled." };
+  });
+}
+
+export async function adjustPointsAction(userId: string, data: Record<string, unknown>): Promise<AdminResult> {
+  return guarded("customers.write", async (actorId) => {
+    const { addPoints, RewardError } = await import("@/server/rewards/service");
+    const points = z.coerce.number().int().min(-100_000).max(100_000).refine((n) => n !== 0, "Enter points to add or remove").parse(data.points);
+    const note = z.string().trim().min(2, "Add a reason").max(200).parse(data.note);
+    try {
+      await db.$transaction((tx) => addPoints(tx, z.string().max(40).parse(userId), points, "ADJUSTMENT", note));
+    } catch (err) {
+      if (err instanceof RewardError) return { ok: false, error: err.message };
+      throw err;
+    }
+    await audit({ actorId, action: "loyalty.adjust", entityType: "User", entityId: userId, data: { points, note } });
+    revalidatePath(`/admin/customers/${userId}`);
+    return { ok: true, message: `${points > 0 ? "Added" : "Removed"} ${Math.abs(points)} points.` };
+  });
+}
+
+// ── Support ──
+
+export async function staffReplyAction(ticketId: string, data: Record<string, unknown>): Promise<AdminResult> {
+  return guarded("support.write", async (actorId) => {
+    const { addMessage } = await import("@/server/support/service");
+    await addMessage(z.string().max(40).parse(ticketId), String(data.body ?? ""), { userId: actorId, isStaff: true });
+    if (data.close === true) await db.supportTicket.update({ where: { id: ticketId }, data: { status: "RESOLVED" } });
+    await audit({ actorId, action: "support.reply", entityType: "SupportTicket", entityId: ticketId });
+    revalidatePath(`/admin/support/${ticketId}`);
+    return { ok: true, message: "Reply emailed to the customer." };
+  });
+}
+
+export async function updateTicketAction(ticketId: string, data: Record<string, unknown>): Promise<AdminResult> {
+  return guarded("support.write", async (actorId) => {
+    const p = z.object({ status: z.enum(["OPEN", "PENDING_CUSTOMER", "PENDING_STAFF", "RESOLVED", "CLOSED"]).optional(), priority: z.enum(["LOW", "NORMAL", "HIGH", "URGENT"]).optional() }).parse(data);
+    await db.supportTicket.update({ where: { id: z.string().max(40).parse(ticketId) }, data: p });
+    await audit({ actorId, action: "support.update", entityType: "SupportTicket", entityId: ticketId, data: p });
+    revalidatePath(`/admin/support/${ticketId}`);
+    return { ok: true, message: "Ticket updated." };
+  });
+}
+
+// ── FAQs (shown on /support) ──
+
+const faqSchema = z.object({
+  id: z.string().max(40).optional().or(z.literal("")),
+  group: z.enum(["orders", "shipping", "payment", "returns", "account", "general"]),
+  question: z.string().trim().min(5, "Write the question").max(200),
+  answer: z.string().trim().min(5, "Write the answer").max(2000),
+  position: z.coerce.number().int().min(0).max(999).default(0),
+});
+
+export async function saveFaqAction(raw: Record<string, unknown>): Promise<AdminResult> {
+  return guarded("content.write", async (actorId) => {
+    const { id, ...data } = faqSchema.parse(raw);
+    const faq = id ? await db.faq.update({ where: { id }, data }) : await db.faq.create({ data });
+    await audit({ actorId, action: id ? "faq.update" : "faq.create", entityType: "Faq", entityId: faq.id, data: { name: faq.question } });
+    revalidatePath("/support");
+    revalidatePath("/admin/faq");
+    return { ok: true, message: id ? "FAQ saved." : "FAQ added." };
+  });
+}
+
+export async function deleteFaqAction(id: string): Promise<AdminResult> {
+  return guarded("content.write", async (actorId) => {
+    await db.faq.delete({ where: { id: z.string().max(40).parse(id) } });
+    await audit({ actorId, action: "faq.delete", entityType: "Faq", entityId: id });
+    revalidatePath("/support");
+    revalidatePath("/admin/faq");
+    return { ok: true, message: "FAQ deleted." };
   });
 }

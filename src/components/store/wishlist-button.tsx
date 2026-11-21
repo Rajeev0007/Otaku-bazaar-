@@ -7,6 +7,7 @@ import { Icon } from "@/components/ui/icon";
 import { useToast } from "@/components/ui/toast";
 import { useShopper } from "@/components/store/shopper-context";
 import { toggleWishlistAction } from "@/app/actions/wishlist";
+import { track } from "@/lib/track";
 
 export function WishlistButton({ productId, productName, variant = "floating", className }: { productId: string; productName: string; variant?: "floating" | "inline" | "large"; className?: string }) {
   const { isWishlisted, setWishlisted } = useShopper();
@@ -30,6 +31,7 @@ export function WishlistButton({ productId, productName, variant = "floating", c
         return;
       }
       setWishlisted(productId, res.saved);
+      if (res.saved) track("wishlist_add", { productId });
       toast({ title: res.saved ? "Saved to wishlist" : "Removed from wishlist", description: productName, action: res.saved ? { label: "View", href: "/wishlist" } : undefined });
       router.refresh();
     });

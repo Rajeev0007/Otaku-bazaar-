@@ -109,6 +109,7 @@ export async function updateReturn(
   if (to === "REFUNDED" && r.kind !== "RETURN") throw new ReturnError("Exchanges and replacements are completed with “Exchanged”, not refunded.");
 
   let refundId: string | null = null;
+  let storeCredit = 0;
   await db.$transaction(async (tx) => {
     if (to === "RECEIVED") {
       for (const i of r.items) {
@@ -132,6 +133,10 @@ export async function updateReturn(
         if (amount > captured.amount - captured.refundedAmount) throw new ReturnError("That's more than the amount left to refund on this payment.");
         const ref = await tx.refund.create({ data: { orderId: r.orderId, paymentId: captured.id, returnId: r.id, amount, currency: r.order.currency, method: "original", status: "PENDING", reason: `Return ${r.number}`, idempotencyKey: `return:${r.id}`, actorId: opts.actorId } });
         refundId = ref.id;
+      } else if (r.order.paymentMethod === "giftcard") {
+        // Paid with gift card/points: refund as a new gift card (store credit).
+        await tx.refund.create({ data: { orderId: r.orderId, returnId: r.id, amount, currency: r.order.currency, method: "gift_card", status: "SUCCEEDED", reason: `Return ${r.number} (store credit)`, idempotencyKey: `return:${r.id}`, actorId: opts.actorId } });
+        storeCredit = amount;
       } else {
         // Cash on delivery: the owner pays the customer by bank transfer/UPI and records it here.
         await tx.refund.create({ data: { orderId: r.orderId, returnId: r.id, amount, currency: r.order.currency, method: "bank_transfer", status: "SUCCEEDED", reason: `Return ${r.number} (paid manually)`, idempotencyKey: `return:${r.id}`, actorId: opts.actorId } });
@@ -140,6 +145,10 @@ export async function updateReturn(
     }
     await tx.returnRequest.update({ where: { id: r.id }, data: { status: to, adminNote: opts.note || undefined, trackingNumber: opts.trackingNumber || undefined } });
   });
+  if (storeCredit) {
+    const { issueGiftCard } = await import("@/server/rewards/service");
+    await issueGiftCard({ amount: storeCredit, recipientEmail: r.order.email, senderName: "The Otaku Bazaar", message: `Store credit for return ${r.number}`, actorId: opts.actorId });
+  }
   if (refundId) {
     const res = await processRefund(refundId);
     if (res.status !== "SUCCEEDED") throw new ReturnError("Razorpay refund failed. Check the order page and retry.");

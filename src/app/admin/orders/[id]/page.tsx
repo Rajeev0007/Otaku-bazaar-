@@ -53,10 +53,10 @@ export default async function OrderDetail({ params }: { params: Promise<{ id: st
               ))}
             </ul>
             <dl className="mt-3 space-y-1 border-t border-line pt-3 text-sm">
-              {[["Subtotal", o.subtotal], ["Discount" + (o.couponCode ? ` (${o.couponCode})` : ""), -o.discountTotal], ["Delivery" + (o.shippingMethod ? ` (${o.shippingMethod})` : ""), o.shippingTotal], ["Gift wrap", o.giftWrapTotal], ["COD fee", o.codFeeTotal]]
+              {[["Subtotal", o.subtotal], ["Discount" + (o.couponCode ? ` (${o.couponCode})` : ""), -o.discountTotal], ["Delivery" + (o.shippingMethod ? ` (${o.shippingMethod})` : ""), o.shippingTotal], ["Gift wrap", o.giftWrapTotal], ["COD fee", o.codFeeTotal], ["Reward points", -o.loyaltyTotal], ["Gift card", -o.giftCardTotal]]
                 .filter(([k, v]) => k === "Subtotal" || v !== 0)
                 .map(([k, v]) => <div key={String(k)} className="flex justify-between"><dt className="text-muted">{k}</dt><dd className="tabular-nums">{formatMoney(Number(v), c)}</dd></div>)}
-              <div className="flex justify-between font-semibold"><dt>Total</dt><dd className="tabular-nums">{formatMoney(o.grandTotal, c)}</dd></div>
+              <div className="flex justify-between font-semibold"><dt>To collect / paid</dt><dd className="tabular-nums">{formatMoney(o.grandTotal, c)}</dd></div>
             </dl>
             {o.giftWrap && <p className="mt-3 rounded-xl bg-accent-soft p-3 text-sm">🎁 Gift wrap{o.giftMessage && <>: “{o.giftMessage}”</>}</p>}
             {o.notes && <p className="mt-3 rounded-xl bg-surface-2 p-3 text-sm">Customer note: {o.notes}</p>}

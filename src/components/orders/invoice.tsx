@@ -29,7 +29,7 @@ export function Invoice({ order, items, settings, kind = "invoice" }: { order: O
             <p className="text-lg font-bold">{kind === "invoice" ? "Tax Invoice" : "Packing Slip"}</p>
             <p>No. {order.number}</p>
             <p>Date {(order.placedAt ?? order.createdAt).toLocaleDateString("en-IN")}</p>
-            <p>Payment: {order.paymentMethod === "cod" ? "Cash on delivery" : "Prepaid"}</p>
+            <p>Payment: {order.paymentMethod === "cod" ? "Cash on delivery" : order.paymentMethod === "giftcard" ? "Gift card" : "Prepaid"}</p>
           </div>
         </header>
         <section className="grid grid-cols-2 gap-6 border-b border-gray-300 py-4">
@@ -84,7 +84,10 @@ export function Invoice({ order, items, settings, kind = "invoice" }: { order: O
             {order.giftWrapTotal > 0 && <div className="flex justify-between"><dt>Gift wrap</dt><dd>{formatMoney(order.giftWrapTotal, c)}</dd></div>}
             {order.codFeeTotal > 0 && <div className="flex justify-between"><dt>COD fee</dt><dd>{formatMoney(order.codFeeTotal, c)}</dd></div>}
             {!order.taxInclusive && <div className="flex justify-between"><dt>{settings.taxLabel}</dt><dd>{formatMoney(order.taxTotal, c)}</dd></div>}
-            <div className="flex justify-between border-t border-gray-300 pt-1 text-base font-bold"><dt>Total</dt><dd>{formatMoney(order.grandTotal, c)}</dd></div>
+            {order.loyaltyTotal + order.giftCardTotal > 0 && <div className="flex justify-between border-t border-gray-300 pt-1"><dt>Invoice value</dt><dd>{formatMoney(order.grandTotal + order.loyaltyTotal + order.giftCardTotal, c)}</dd></div>}
+            {order.loyaltyTotal > 0 && <div className="flex justify-between"><dt>Paid with reward points</dt><dd>−{formatMoney(order.loyaltyTotal, c)}</dd></div>}
+            {order.giftCardTotal > 0 && <div className="flex justify-between"><dt>Paid with gift card</dt><dd>−{formatMoney(order.giftCardTotal, c)}</dd></div>}
+            <div className="flex justify-between border-t border-gray-300 pt-1 text-base font-bold"><dt>{order.loyaltyTotal + order.giftCardTotal > 0 ? "Amount paid/due" : "Total"}</dt><dd>{formatMoney(order.grandTotal, c)}</dd></div>
             {order.taxInclusive && <p className="text-right text-xs text-gray-600">Includes {settings.taxLabel} of {formatMoney(order.taxTotal, c)} on goods</p>}
           </dl>
         ) : (

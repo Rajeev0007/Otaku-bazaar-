@@ -7,6 +7,7 @@ import { getStoreSettings } from "@/server/settings";
 import { getIntegrations } from "@/server/integrations";
 import { inclusiveTax } from "@/lib/money";
 import type { PaymentMethod } from "@/lib/checkout";
+import { checkGiftCard, redeemablePoints } from "@/server/rewards/service";
 
 export type QuoteLine = PricedLine & {
   variantId: string;
@@ -36,14 +37,19 @@ export type Quote = {
   tax: number;
   taxInclusive: boolean;
   taxLabel: string;
+  /** Amount the customer still pays after gift card and points. */
   total: number;
+  grossTotal: number;
+  points: { balance: number; available: number; availableValue: number; applied: number; value: number; reason: string | null; earn: number } | null;
+  giftCard: { id: string; last4: string; applied: number; remaining: number } | null;
+  giftCardError: string | null;
   payment: { razorpay: boolean; razorpayMode: "test" | "live" | null; cod: boolean; codReason: string | null };
   problems: string[];
 };
 
 export async function buildQuote(
   cart: CartWithItems | null,
-  input: { email?: string; postalCode?: string; shippingMethod?: string; paymentMethod?: PaymentMethod; couponCode?: string; userId?: string | null },
+  input: { email?: string; postalCode?: string; shippingMethod?: string; paymentMethod?: PaymentMethod; couponCode?: string; userId?: string | null; giftCardCode?: string; usePoints?: boolean },
 ): Promise<Quote> {
   const s = await getStoreSettings();
   const integ = await getIntegrations();
@@ -115,8 +121,29 @@ export async function buildQuote(
   const razorpay = !!integ.razorpay;
   if (!razorpay && !cod) problems.push("No payment method is available right now. Please contact us.");
 
-  const codFee = input.paymentMethod === "cod" && cod ? s.cod.fee : 0;
-  const total = preCodTotal + codFee;
+  // Reward points, then gift card, reduce what's left to pay.
+  let points: Quote["points"] = null;
+  let left = preCodTotal;
+  if (input.userId && s.loyalty.enabled) {
+    const r = await redeemablePoints(input.userId, preCodTotal);
+    const applied = input.usePoints ? r.points : 0;
+    left -= applied * s.loyalty.pointValue;
+    points = { balance: r.balance, available: r.points, availableValue: r.value, applied, value: applied * s.loyalty.pointValue, reason: r.reason, earn: 0 };
+  }
+  let giftCard: Quote["giftCard"] = null;
+  let giftCardError: string | null = null;
+  if (input.giftCardCode) {
+    const g = await checkGiftCard(input.giftCardCode, currency);
+    if (g.ok) {
+      const applied = Math.min(g.balance, left);
+      left -= applied;
+      giftCard = { id: g.id, last4: g.last4, applied, remaining: g.balance - applied };
+    } else giftCardError = g.error;
+  }
+  const codFee = input.paymentMethod === "cod" && cod && left > 0 ? s.cod.fee : 0;
+  const total = left + codFee;
+  const grossTotal = preCodTotal + codFee;
+  if (points && s.loyalty.pointsPer100) points.earn = Math.floor(((total + (giftCard?.applied ?? 0)) / 10_000) * s.loyalty.pointsPer100);
 
   if (input.postalCode && !chosen && !shippingError) shippingError = "Delivery isn't available to this PIN code.";
 
@@ -138,6 +165,10 @@ export async function buildQuote(
     taxInclusive,
     taxLabel: s.taxLabel,
     total,
+    grossTotal,
+    points,
+    giftCard,
+    giftCardError,
     payment: { razorpay, razorpayMode: integ.razorpay?.mode ?? null, cod, codReason },
     problems,
   };

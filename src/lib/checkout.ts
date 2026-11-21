@@ -35,6 +35,8 @@ export const checkoutSchema = z.object({
   billing: addressSchema.optional(),
   shippingMethod: z.string().max(40).default("standard"),
   paymentMethod: z.enum(PAYMENT_METHODS),
+  giftCardCode: z.string().trim().max(40).optional().default(""),
+  usePoints: z.boolean().default(false),
   couponCode: z.string().trim().toUpperCase().max(40).optional().default(""),
   notes: z.string().trim().max(500).optional().default(""),
   saveAddress: z.boolean().default(false),
@@ -48,6 +50,8 @@ export const quoteSchema = z.object({
   postalCode: z.string().max(10).optional().default(""),
   shippingMethod: z.string().max(40).optional().default("standard"),
   paymentMethod: z.enum(PAYMENT_METHODS).optional().default("razorpay"),
+  giftCardCode: z.string().trim().max(40).optional().default(""),
+  usePoints: z.boolean().optional().default(false),
   couponCode: z.string().trim().toUpperCase().max(40).optional().default(""),
 });
 export type QuoteInput = z.infer<typeof quoteSchema>;

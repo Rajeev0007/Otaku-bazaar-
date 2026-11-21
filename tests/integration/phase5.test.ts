@@ -38,7 +38,7 @@ afterAll(async () => {
 });
 
 const address = { fullName: "Asha Rao", phone: "+91 98765 43210", line1: "12 MG Road", line2: "", landmark: "", city: "Bengaluru", state: "Karnataka" as const, postalCode: "560001", country: "IN" as const, instructions: "" };
-const input = (over: Partial<CheckoutInput> = {}): CheckoutInput => ({ email: `b-${randomToken(4).toLowerCase()}@test.local`, phone: "+91 98765 43210", shipping: address, billingSameAsShipping: true, shippingMethod: "standard", paymentMethod: "cod", couponCode: "", notes: "", saveAddress: false, marketingOptIn: false, idempotencyKey: randomToken(16), ...over });
+const input = (over: Partial<CheckoutInput> = {}): CheckoutInput => ({ email: `b-${randomToken(4).toLowerCase()}@test.local`, phone: "+91 98765 43210", shipping: address, billingSameAsShipping: true, shippingMethod: "standard", paymentMethod: "cod", giftCardCode: "", usePoints: false, couponCode: "", notes: "", saveAddress: false, marketingOptIn: false, idempotencyKey: randomToken(16), ...over });
 async function deliveredOrder(paymentMethod: "cod" | "razorpay", stock = 5, qty = 2) {
   const { variants } = await makeProduct({ stock: [stock], price: 50_000 });
   const { cart, newGuestToken } = await getOrCreateCart({});

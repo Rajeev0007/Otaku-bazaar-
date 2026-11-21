@@ -34,6 +34,9 @@ export function CheckoutClient({ initialQuote, user, addresses, storeName, giftM
   const [payment, setPayment] = useState<PaymentMethod>(initialQuote.payment.razorpay ? "razorpay" : "cod");
   const [couponInput, setCouponInput] = useState("");
   const [coupon, setCoupon] = useState("");
+  const [gcInput, setGcInput] = useState("");
+  const [giftCard, setGiftCard] = useState("");
+  const [usePoints, setUsePoints] = useState(false);
   const [notes, setNotes] = useState("");
   const [saveAddress, setSaveAddress] = useState(!!user && addresses.length === 0);
   const [optIn, setOptIn] = useState(false);
@@ -49,7 +52,7 @@ export function CheckoutClient({ initialQuote, user, addresses, storeName, giftM
   const refresh = useCallback(async () => {
     setQuoting(true);
     try {
-      const q = await quoteAction({ email, postalCode: /^[1-9][0-9]{5}$/.test(pin) ? pin : "", shippingMethod: method, paymentMethod: payment, couponCode: coupon });
+      const q = await quoteAction({ email, postalCode: /^[1-9][0-9]{5}$/.test(pin) ? pin : "", shippingMethod: method, paymentMethod: payment, couponCode: coupon, giftCardCode: giftCard, usePoints });
       setQuote(q);
       if (q.shippingMethod && q.shippingMethod !== method) setMethod(q.shippingMethod);
       if (payment === "cod" && !q.payment.cod && q.payment.razorpay) setPayment("razorpay");
@@ -57,7 +60,7 @@ export function CheckoutClient({ initialQuote, user, addresses, storeName, giftM
     } finally {
       setQuoting(false);
     }
-  }, [email, pin, method, payment, coupon]);
+  }, [email, pin, method, payment, coupon, giftCard, usePoints]);
 
   useEffect(() => {
     const t = setTimeout(refresh, 250);
@@ -87,6 +90,8 @@ export function CheckoutClient({ initialQuote, user, addresses, storeName, giftM
         shippingMethod: method,
         paymentMethod: payment,
         couponCode: coupon,
+        giftCardCode: giftCard,
+        usePoints,
         notes,
         saveAddress: !!user && addrId === "new" && saveAddress,
         marketingOptIn: optIn,
@@ -148,6 +153,36 @@ export function CheckoutClient({ initialQuote, user, addresses, storeName, giftM
           </form>
         )}
         {quote.couponError && coupon && <p className="mt-1.5 text-xs text-danger">{quote.couponError}</p>}
+        <div className="mt-3">
+          {quote.giftCard ? (
+            <div className="flex items-center justify-between rounded-xl bg-success/10 px-3 py-2 text-sm text-success">
+              <span>Gift card ••{quote.giftCard.last4} · −{formatMoney(quote.giftCard.applied, quote.currency)}<span className="block text-xs opacity-80">{formatMoney(quote.giftCard.remaining, quote.currency)} left after this order</span></span>
+              <button onClick={() => (setGiftCard(""), setGcInput(""))} className="text-xs underline">Remove</button>
+            </div>
+          ) : (
+            <details className="text-sm" open={!!giftCard}>
+              <summary className="cursor-pointer text-muted hover:text-fg">Have a gift card?</summary>
+              <form onSubmit={(e) => { e.preventDefault(); setGiftCard(gcInput.trim()); }} className="mt-2 flex gap-2">
+                <Input value={gcInput} onChange={(e) => setGcInput(e.target.value)} placeholder="OBGC-XXXX-XXXX-XXXX" aria-label="Gift card code" className="h-10 font-mono uppercase" />
+                <Button type="submit" variant="outline" size="sm" className="h-10" disabled={!gcInput.trim()}>Apply</Button>
+              </form>
+              {quote.giftCardError && giftCard && <p className="mt-1.5 text-xs text-danger">{quote.giftCardError}</p>}
+            </details>
+          )}
+        </div>
+        {quote.points && (quote.points.balance > 0 || quote.points.earn > 0) && (
+          <div className="mt-3 rounded-xl border border-line p-3 text-sm">
+            {quote.points.available > 0 ? (
+              <label className="flex cursor-pointer items-center gap-2">
+                <input type="checkbox" checked={usePoints} onChange={(e) => setUsePoints(e.target.checked)} className="h-4 w-4 accent-[var(--accent)]" aria-label="Use reward points" />
+                <span>Use {quote.points.available} of your {quote.points.balance} points <b className="text-success">−{formatMoney(quote.points.availableValue, quote.currency)}</b></span>
+              </label>
+            ) : (
+              <p className="text-muted">You have {quote.points.balance} points{quote.points.reason ? ` · ${quote.points.reason}` : ""}</p>
+            )}
+            {quote.points.earn > 0 && <p className="mt-1 text-xs text-success">You'll earn {quote.points.earn} points when this order is delivered</p>}
+          </div>
+        )}
       </div>
     </Summary>
   );
@@ -259,7 +294,7 @@ export function CheckoutClient({ initialQuote, user, addresses, storeName, giftM
             By placing this order you agree to our <Link href="/pages/terms" className="underline">Terms</Link>, <Link href="/pages/returns-policy" className="underline">Returns Policy</Link> and <Link href="/pages/privacy-policy" className="underline">Privacy Policy</Link>.
           </p>
           <Button size="lg" className="mt-4 w-full" onClick={place} loading={placing} disabled={blocked || quoting}>
-            {payment === "cod" ? `Place order · ${formatMoney(quote.total, quote.currency)}` : `Pay ${formatMoney(quote.total, quote.currency)}`}
+            {quote.total === 0 && quote.lines.length ? "Place order · fully paid" : payment === "cod" ? `Place order · ${formatMoney(quote.total, quote.currency)}` : `Pay ${formatMoney(quote.total, quote.currency)}`}
           </Button>
           <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-subtle"><Icon name="shield" size={13} /> Prices and stock are confirmed on our server when you place the order.</p>
         </div>
@@ -271,7 +306,7 @@ export function CheckoutClient({ initialQuote, user, addresses, storeName, giftM
 
       <div className="glass fixed inset-x-0 bottom-0 z-40 border-t border-line p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:hidden">
         <Button size="lg" className="w-full" onClick={place} loading={placing} disabled={blocked || quoting}>
-          {payment === "cod" ? "Place order" : "Pay"} · {formatMoney(quote.total, quote.currency)}
+          {quote.total === 0 && quote.lines.length ? "Place order" : payment === "cod" ? "Place order" : "Pay"} · {formatMoney(quote.total, quote.currency)}
         </Button>
       </div>
     </div>
@@ -339,6 +374,8 @@ function Summary({ quote, quoting, giftMessage, children }: { quote: Quote; quot
         ["Delivery", quote.shippingMethod ? (quote.shipping ? formatMoney(quote.shipping, c) : "Free") : "Enter PIN code", ""],
         ...(quote.giftWrap ? [["Gift wrap", formatMoney(quote.giftWrap, c), ""]] : []),
         ...(quote.codFee ? [["Cash on delivery fee", formatMoney(quote.codFee, c), ""]] : []),
+        ...(quote.points?.value ? [[`Reward points (${quote.points.applied})`, `−${formatMoney(quote.points.value, c)}`, "text-success"]] : []),
+        ...(quote.giftCard?.applied ? [["Gift card", `−${formatMoney(quote.giftCard.applied, c)}`, "text-success"]] : []),
         ...(!quote.taxInclusive ? [[quote.taxLabel, formatMoney(quote.tax, c), ""]] : []),
       ] as [string, string, string][],
     [quote, c],

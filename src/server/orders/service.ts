@@ -9,6 +9,8 @@ import { syncProductAggregates } from "@/server/catalog/sync";
 import { createRazorpayOrder, refundRazorpayPayment } from "@/server/payments/razorpay";
 import type { CartWithItems } from "@/server/cart/service";
 import type { CheckoutInput } from "@/lib/checkout";
+import { addPoints, awardOrderPoints, redeemGiftCard, refundOrderPoints, restoreGiftCardsForOrder } from "@/server/rewards/service";
+import { getStoreSettings } from "@/server/settings";
 
 export const RESERVATION_MINUTES = 30;
 
@@ -75,15 +77,23 @@ export async function placeOrder(input: CheckoutInput, cart: CartWithItems, ctx:
     paymentMethod: input.paymentMethod,
     couponCode: input.couponCode,
     userId: ctx.userId,
+    giftCardCode: input.giftCardCode,
+    usePoints: input.usePoints,
   });
   if (quote.problems.length) throw new OrderError(quote.problems[0]!);
   if (quote.shippingError || !quote.shippingMethod) throw new OrderError(quote.shippingError ?? "Choose a delivery option.");
   if (input.couponCode && quote.couponError) throw new OrderError(quote.couponError);
-  if (input.paymentMethod === "cod" && !quote.payment.cod) throw new OrderError(quote.payment.codReason ?? "Cash on delivery isn't available for this order.");
-  if (input.paymentMethod === "razorpay" && !quote.payment.razorpay) throw new OrderError("Online payment isn't available right now. Choose cash on delivery.");
+  if (input.giftCardCode && quote.giftCardError) throw new OrderError(quote.giftCardError);
+  // Gift card / points cover everything: no payment step.
+  const fullyCovered = quote.total === 0;
+  if (!fullyCovered && input.paymentMethod === "cod" && !quote.payment.cod) throw new OrderError(quote.payment.codReason ?? "Cash on delivery isn't available for this order.");
+  if (!fullyCovered && input.paymentMethod === "razorpay" && !quote.payment.razorpay) throw new OrderError("Online payment isn't available right now. Choose cash on delivery.");
+  const pointValue = (await getStoreSettings()).loyalty.pointValue;
 
   const accessToken = randomToken();
-  const isCod = input.paymentMethod === "cod";
+  const isCod = !fullyCovered && input.paymentMethod === "cod";
+  const immediate = isCod || fullyCovered;
+  const method = fullyCovered ? "giftcard" : input.paymentMethod;
   const billing = input.billingSameAsShipping ? null : input.billing ?? null;
 
   const order = await db.$transaction(
@@ -94,9 +104,9 @@ export async function placeOrder(input: CheckoutInput, cart: CartWithItems, ctx:
           userId: ctx.userId,
           email: input.email,
           phone: input.phone,
-          status: isCod ? "PLACED" : "PENDING_PAYMENT",
-          paymentStatus: "PENDING",
-          paymentMethod: input.paymentMethod,
+          status: fullyCovered ? "PAYMENT_CONFIRMED" : isCod ? "PLACED" : "PENDING_PAYMENT",
+          paymentStatus: fullyCovered ? "CAPTURED" : "PENDING",
+          paymentMethod: method,
           currency: quote.currency,
           subtotal: quote.subtotal,
           discountTotal: quote.discount,
@@ -105,6 +115,8 @@ export async function placeOrder(input: CheckoutInput, cart: CartWithItems, ctx:
           taxInclusive: quote.taxInclusive,
           giftWrapTotal: quote.giftWrap,
           codFeeTotal: quote.codFee,
+          giftCardTotal: quote.giftCard?.applied ?? 0,
+          loyaltyTotal: quote.points?.value ?? 0,
           grandTotal: quote.total,
           couponCode: quote.coupon?.code ?? null,
           shippingMethod: quote.shippingMethod,
@@ -116,19 +128,26 @@ export async function placeOrder(input: CheckoutInput, cart: CartWithItems, ctx:
           accessTokenHash: sha256(accessToken),
           idempotencyKey: input.idempotencyKey,
           cartId: cart.id,
-          placedAt: isCod ? new Date() : null,
+          placedAt: immediate ? new Date() : null,
           items: { create: allocateDiscount(quote) },
-          events: { create: { status: isCod ? "PLACED" : "PENDING_PAYMENT", message: isCod ? "Order placed (cash on delivery)" : "Waiting for payment" } },
+          events: { create: { status: fullyCovered ? "PAYMENT_CONFIRMED" : isCod ? "PLACED" : "PENDING_PAYMENT", message: fullyCovered ? "Paid with gift card / reward points" : isCod ? "Order placed (cash on delivery)" : "Waiting for payment" } },
         },
       });
       for (const l of quote.lines) {
-        const ok = isCod ? await takeStock(tx, l.variantId, l.quantity, o.id) : await reserveStock(tx, l.variantId, l.quantity, o.id);
+        const ok = immediate ? await takeStock(tx, l.variantId, l.quantity, o.id) : await reserveStock(tx, l.variantId, l.quantity, o.id);
         if (!ok) throw new OrderError(`${l.name} (${l.variantTitle}) just sold out. Update your cart and try again.`);
       }
+      if (quote.giftCard?.applied) await redeemGiftCard(tx, quote.giftCard.id, quote.giftCard.applied, o.id);
+      if (quote.points?.applied && ctx.userId) {
+        if (quote.points.value !== quote.points.applied * pointValue) throw new OrderError("Reward point value changed. Please review your order.");
+        await addPoints(tx, ctx.userId, -quote.points.applied, "REDEEM", o.id);
+      }
       await tx.payment.create({
-        data: { orderId: o.id, provider: input.paymentMethod, amount: quote.total, currency: quote.currency, idempotencyKey: `${o.id}:1`, method: isCod ? "cod" : null },
+        data: fullyCovered
+          ? { orderId: o.id, provider: "giftcard", amount: (quote.giftCard?.applied ?? 0) + (quote.points?.value ?? 0), currency: quote.currency, idempotencyKey: `${o.id}:1`, method: "giftcard", status: "CAPTURED" }
+          : { orderId: o.id, provider: input.paymentMethod, amount: quote.total, currency: quote.currency, idempotencyKey: `${o.id}:1`, method: isCod ? "cod" : null },
       });
-      if (isCod) await finalizeOrder(tx, o.id);
+      if (immediate) await finalizeOrder(tx, o.id);
       if (input.saveAddress && ctx.userId) {
         const count = await tx.address.count({ where: { userId: ctx.userId } });
         await tx.address.create({ data: { ...input.shipping, userId: ctx.userId, isDefault: count === 0 } });
@@ -136,13 +155,13 @@ export async function placeOrder(input: CheckoutInput, cart: CartWithItems, ctx:
       if (input.marketingOptIn) {
         await tx.newsletterSubscriber.upsert({ where: { email: input.email }, create: { email: input.email, source: "checkout", confirmedAt: new Date() }, update: { unsubscribedAt: null } });
       }
-      if (!isCod) for (const l of quote.lines) await syncProductAggregates(l.productId, tx);
+      if (!immediate) for (const l of quote.lines) await syncProductAggregates(l.productId, tx);
       return o;
     },
     { timeout: 20_000, isolationLevel: "ReadCommitted" },
   );
 
-  if (isCod) {
+  if (immediate) {
     await sendOrderConfirmation(order.id, accessToken);
     return { orderId: order.id, number: order.number, accessToken, next: { type: "done" } };
   }
@@ -307,6 +326,8 @@ export async function cancelOrder(orderId: string, opts: { reason: string; actor
           }
         }
       }
+      await restoreGiftCardsForOrder(tx, o.id);
+      await refundOrderPoints(tx, o.id);
       const captured = o.payments.find((p) => p.provider === "razorpay" && p.status === "CAPTURED" && p.providerPaymentId);
       let refundId: string | null = null;
       if (captured) {
@@ -383,6 +404,7 @@ export async function updateOrderStatus(orderId: string, to: OrderStatus, opts: 
       await tx.shipment.update({ where: { id: o.shipments[0].id }, data: { status: to, ...(to === "DELIVERED" ? { deliveredAt: new Date() } : {}), events: { create: { status: to, occurredAt: new Date(), message: opts.message, location: opts.location } } } });
     }
     // COD: money is collected on delivery.
+    if (to === "DELIVERED") await awardOrderPoints(tx, orderId);
     if (to === "DELIVERED" && o.paymentMethod === "cod") {
       await tx.payment.updateMany({ where: { orderId, provider: "cod", status: "PENDING" }, data: { status: "CAPTURED" } });
       await tx.order.update({ where: { id: orderId }, data: { paymentStatus: "CAPTURED" } });

@@ -96,6 +96,8 @@ export async function customerCancelAction(number: string, reason: string): Prom
     const order = await canViewOrder(number, user);
     if (!order) return { ok: false, error: "Order not found." };
     const r = await cancelOrder(order.id, { reason: z.string().trim().min(3, "Tell us why you're cancelling").max(300).parse(reason), actorId: user?.id ?? null, byCustomer: true });
+    const { sendDueStockAlerts } = await import("@/server/inventory/alerts");
+    await sendDueStockAlerts().catch(() => undefined);
     return { ok: true, message: r.refundId ? "Order cancelled. Your refund has been started and reaches your account in 5–7 business days." : "Order cancelled." };
   } catch (err) {
     if (err instanceof OrderError) return { ok: false, error: err.message };

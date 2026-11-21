@@ -7,6 +7,7 @@ import { Icon } from "@/components/ui/icon";
 import { useToast } from "@/components/ui/toast";
 import { useShopper } from "@/components/store/shopper-context";
 import { addToCartAction } from "@/app/actions/cart";
+import { track } from "@/lib/track";
 
 type V = { id: string; title: string; available: number };
 
@@ -22,6 +23,7 @@ export function QuickAdd({ productName, variants, inStock, href, full }: { produ
       const res = await addToCartAction(variant.id, 1);
       if (!res.ok) return toast({ tone: "error", title: res.error });
       setCartCount(res.count);
+      track("add_to_cart", { variantId: variant.id, quantity: 1 });
       setOpen(false);
       toast({ title: "Added to cart", description: variants.length > 1 ? `${productName} · ${variant.title}` : productName, action: { label: "View cart", href: "/cart" } });
       setCartOpen(true);

@@ -73,6 +73,13 @@ Use **Duplicate** on an existing product to add similar items quickly.
 - **Shiprocket (optional):** Admin → Integrations → Shipping. Paste your Shiprocket API user and pickup location name, and add the webhook URL and token shown there in Shiprocket. Each order then gets a **Book courier & ship** button that books the courier, prints the label and keeps tracking updated automatically. Without Shiprocket, type the courier and tracking number on the order page.
 - **Returns:** customers request returns, exchanges or replacements from their order page after delivery (within each product's return window). Handle them in Admin → **Returns**: approve → item received (restock) → refund or send the exchange. Prepaid orders are refunded through Razorpay; for cash-on-delivery orders you send the money by UPI/bank and record it.
 
+## Customer care, rewards and analytics
+
+- **Help page:** customers write to you from `/support` (also the round help button on every page). Messages arrive in Admin → **Support tickets**; your reply is emailed to them. Add common questions in Admin → **FAQs**.
+- **Gift cards:** Admin → **Gift cards** → issue a card. The code is shown once; if you enter the recipient's email it is sent to them.
+- **Reward points:** on by default (2 points per ₹100, 1 point = ₹1, use up to 20% of an order). Change or switch off in Store settings → Reward points.
+- **Analytics:** Admin → **Analytics** works without any setup. To also use Google Analytics or Meta Pixel, paste the GA4 measurement ID (`G-…`) and/or Pixel ID in Store settings → Analytics & ads. They only load for visitors who accept the cookie banner, which appears once an ID is set.
+
 ## Optional
 
 - **Own domain:** Vercel → Settings → **Domains** → Add, then follow the DNS instructions. Links update automatically.

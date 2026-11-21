@@ -12,6 +12,7 @@ import { useShopper } from "@/components/store/shopper-context";
 import { QuantitySelector } from "@/components/store/quantity-selector";
 import { WishlistButton } from "@/components/store/wishlist-button";
 import { addToCartAction } from "@/app/actions/cart";
+import { track } from "@/lib/track";
 import { checkDeliveryAction, stockAlertAction } from "@/app/actions/product";
 
 export type PanelVariant = {
@@ -107,6 +108,7 @@ export function PurchasePanel({ productId, productName, currency, variants, maxQ
         return;
       }
       setCartCount(res.count);
+      track("add_to_cart", { productId, variantId: variant.id, quantity: qty });
       if (buyNow) {
         router.push("/cart");
         return;

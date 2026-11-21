@@ -5,15 +5,15 @@ import { lowStockVariants } from "@/server/inventory/service";
 import { formatMoney } from "@/lib/money";
 import { Card, PageHeader, Stat, Table } from "@/components/admin/ui";
 import { getSetupStatus } from "@/server/admin/setup-status";
+import { COUNTED_ORDER } from "@/server/analytics/reports";
 
 export default async function AdminDashboard({ searchParams }: { searchParams: Promise<{ welcome?: string }> }) {
   await requireStaff("dashboard.view", "/admin");
   const welcome = (await searchParams).welcome === "owner";
   const since30 = new Date(Date.now() - 30 * 86_400_000);
-  const paid = { paymentStatus: { in: ["CAPTURED", "PARTIALLY_REFUNDED"] as ("CAPTURED" | "PARTIALLY_REFUNDED")[] } };
-  const [revenue, orderCount, customers, newCustomers, activeProducts, outOfStock, low, subscribers, activity, topViewed, pendingQuestions, carts] = await Promise.all([
-    db.order.aggregate({ where: { ...paid, placedAt: { gte: since30 } }, _sum: { grandTotal: true }, _count: true }),
-    db.order.count({ where: { status: { notIn: ["PENDING_PAYMENT"] } } }),
+  const [revenue, toFulfil, customers, newCustomers, activeProducts, outOfStock, low, subscribers, activity, topViewed, pendingQuestions, carts] = await Promise.all([
+    db.order.aggregate({ where: { ...COUNTED_ORDER, placedAt: { gte: since30 } }, _sum: { grandTotal: true }, _count: true }),
+    db.order.count({ where: { status: { in: ["PLACED", "PAYMENT_CONFIRMED", "PROCESSING", "PACKED"] } } }),
     db.user.count({ where: { isStaff: false, status: "ACTIVE" } }),
     db.user.count({ where: { isStaff: false, createdAt: { gte: since30 } } }),
     db.product.count({ where: { status: "ACTIVE" } }),
@@ -57,13 +57,13 @@ export default async function AdminDashboard({ searchParams }: { searchParams: P
         </details>
       )}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Stat label="Revenue (30d)" value={formatMoney(revenue._sum.grandTotal ?? 0, "INR")} hint={orderCount ? `${revenue._count} paid orders` : "Orders begin when checkout launches"} />
-        <Stat label="Avg. order value" value={formatMoney(aov, "INR")} hint="Paid orders, 30 days" />
-        <Stat label="Customers" value={customers.toLocaleString("en-IN")} hint={`${newCustomers} new in 30 days`} />
+        <Stat label="Sales (30d)" value={formatMoney(revenue._sum.grandTotal ?? 0, "INR")} hint={<Link href="/admin/analytics" className="hover:underline">{revenue._count} order{revenue._count === 1 ? "" : "s"} · full report →</Link>} />
+        <Stat label="Avg. order value" value={formatMoney(aov, "INR")} hint="Placed orders, incl. COD" />
+        <Stat label="To fulfil" value={toFulfil} tone={toFulfil ? "warning" : undefined} hint={<Link href="/admin/orders" className="hover:underline">Placed, not yet shipped →</Link>} />
+        <Stat label="Customers" value={customers.toLocaleString("en-IN")} hint={`${newCustomers} new in 30 days · ${subscribers} newsletter`} />
         <Stat label="Active carts" value={carts.toLocaleString("en-IN")} hint="Carts with items" />
         <Stat label="Active products" value={activeProducts} hint={`${outOfStock} fully out of stock`} tone={outOfStock ? "warning" : undefined} />
         <Stat label="Low-stock variants" value={low.length >= 8 ? "8+" : low.length} tone={low.length ? "warning" : "success"} hint="At or below alert threshold" />
-        <Stat label="Newsletter" value={subscribers.toLocaleString("en-IN")} hint="Active subscribers" />
         <Stat label="Questions to answer" value={pendingQuestions} tone={pendingQuestions ? "warning" : undefined} hint="Product Q&A awaiting reply" />
       </div>
 

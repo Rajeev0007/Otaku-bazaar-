@@ -41,7 +41,7 @@ afterAll(async () => {
 
 const address = { fullName: "Asha Rao", phone: "+91 98765 43210", line1: "12 MG Road", line2: "", landmark: "", city: "Bengaluru", state: "Karnataka" as const, postalCode: "560001", country: "IN" as const, instructions: "" };
 function input(over: Partial<CheckoutInput> = {}): CheckoutInput {
-  return { email: `buyer-${randomToken(4).toLowerCase()}@test.local`, phone: "+91 98765 43210", shipping: address, billingSameAsShipping: true, shippingMethod: "standard", paymentMethod: "cod", couponCode: "", notes: "", saveAddress: false, marketingOptIn: false, idempotencyKey: randomToken(16), ...over };
+  return { email: `buyer-${randomToken(4).toLowerCase()}@test.local`, phone: "+91 98765 43210", shipping: address, billingSameAsShipping: true, shippingMethod: "standard", paymentMethod: "cod", giftCardCode: "", usePoints: false, couponCode: "", notes: "", saveAddress: false, marketingOptIn: false, idempotencyKey: randomToken(16), ...over };
 }
 
 async function cartWith(variantId: string, qty: number) {

@@ -2,8 +2,8 @@
 
 Premium anime merchandise store: Next.js 15 (App Router) · TypeScript · Tailwind CSS 4 · PostgreSQL · Prisma 6.
 
-> **Status:** this branch is a staged rebuild. Phases 1–3 (storefront, catalog, accounts, cart, wishlist, admin) are built and tested.
-> **Checkout and payments are not built yet.** Do not point a live domain at this version until Phase 4 ships. See [Roadmap](#roadmap).
+> **Status:** storefront, checkout (Razorpay + cash on delivery), orders, shipping, returns, gift cards, reward points, support and analytics are built and tested.
+> Online payments stay in **test mode** until you add live Razorpay keys in Admin → Integrations. Stripe/international payments, abandoned-cart emails and the blog are not built yet. See [Roadmap](#roadmap).
 
 ## What works today
 
@@ -18,6 +18,20 @@ Premium anime merchandise store: Next.js 15 (App Router) · TypeScript · Tailwi
 - Accounts: email/password with scrypt hashing, email verification, forgot/reset password, Google OAuth (PKCE), profile, change password, active sessions, and "sign out other devices".
 - SEO: per-page metadata, canonical URLs, Open Graph, sitemap.xml, robots.txt and Organization JSON-LD.
 - Editable policy page templates with clear `[placeholders]`. No business details are invented.
+
+**Orders and customer care**
+- Checkout with coupons, gift cards and reward points; Razorpay (UPI/cards/net banking/wallets) and cash on delivery; order tracking, cancellations, invoices, returns/exchanges and refunds.
+- Gift cards: issued from the admin (optionally emailed), checked from My account, used at checkout (they can cover the whole order) and restored if the order is cancelled. Gift-card-paid returns are refunded as a new gift card.
+- Reward points: earned when an order is delivered, redeemable at checkout up to a limit you set, returned if the order is cancelled. Rates are in Store settings → Reward points.
+- Verified reviews written from the order page after delivery (moderated before they appear).
+- Back-in-stock emails sent automatically when stock is added.
+- Help page (`/support`) with FAQs and a contact form; a floating help button; tickets in My account → Support and in the admin support inbox.
+- Privacy: customers can download their data and delete their account (orders are kept for tax records but unlinked).
+
+**Analytics**
+- Cookie-free first-party tracking of page views, product views, add-to-cart, checkout starts and wishlist saves (no query strings or personal data stored).
+- Admin → Analytics: sales by day (7/30/90 days), AOV, refunds, conversion funnel, best sellers, most viewed, top and zero-result searches, coupon usage, traffic sources, repeat customers and abandoned carts.
+- Google Analytics 4 and Meta Pixel load only after the visitor accepts cookies. Add their IDs in Store settings.
 
 **Admin (`/admin`)**, with role-based access (Super Admin, Store Manager, Product Manager, Order Manager, Support Agent, Marketing Manager)
 - Dashboard with real metrics from the database.
@@ -109,6 +123,6 @@ The database schema already contains the tables for every later phase (orders, p
 | 1–3 | Design system, storefront, catalog, search, filters, PDP, cart, wishlist, auth, admin products/inventory/content/RBAC | ✅ This PR |
 | 4 | Checkout, addresses, coupon engine, Razorpay (UPI/cards/net banking/wallets) and COD, webhooks, idempotency, stock reservation, orders, tracking page, cancellations and refunds, invoices, admin orders and coupons | ✅ Done (Stripe/international later) |
 | 5 | Shiprocket (book courier, labels, webhook tracking), returns/exchanges/replacements with restock and partial refunds, simpler mobile-friendly product editor | ✅ Done |
-| 6 | Customer order history, reviews from verified orders, support tickets + widget, notifications/templates, loyalty, gift cards | |
-| 7 | Analytics dashboards + consent-aware GA4/Meta Pixel, blog, multi-currency/markets, abandoned cart recovery | |
+| 6 | Verified reviews, support tickets + help widget + FAQs, loyalty points, gift cards, back-in-stock emails, data export/account deletion | ✅ Done |
+| 7 | Analytics dashboard, consent-aware GA4/Meta Pixel | ✅ Done. Blog, multi-currency/markets and abandoned-cart emails are still to do |
 | 8 | Security review, performance tuning, load tests, production hardening | |

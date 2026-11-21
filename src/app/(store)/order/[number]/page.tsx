@@ -14,6 +14,7 @@ import { CancelOrder, PayNow } from "@/components/checkout/order-actions";
 import { ReturnForm } from "@/components/checkout/return-form";
 import { returnableItems, RETURN_REASONS } from "@/server/returns/service";
 import { db } from "@/server/db";
+import { ReviewForm } from "@/components/account/account-extras";
 
 export const metadata: Metadata = { title: "Your order", robots: { index: false } };
 
@@ -37,6 +38,7 @@ export default async function OrderPage({ params, searchParams }: { params: Prom
     canReturn ? returnableItems(o.id) : Promise.resolve(null),
     db.returnRequest.findMany({ where: { orderId: o.id }, orderBy: { createdAt: "desc" } }),
   ]);
+  const reviewed = new Set((await db.review.findMany({ where: { orderItemId: { in: o.items.map((i) => i.id) } }, select: { orderItemId: true } })).map((r) => r.orderItemId));
 
   return (
     <div className="container-page max-w-5xl pb-16 pt-8">
@@ -105,6 +107,7 @@ export default async function OrderPage({ params, searchParams }: { params: Prom
                 <div className="min-w-0 flex-1">
                   {i.variant?.product.slug ? <Link href={`/p/${i.variant.product.slug}`} className="font-medium hover:underline">{i.productName}</Link> : <p className="font-medium">{i.productName}</p>}
                   <p className="text-xs text-muted">{i.variantTitle !== "Default" && `${i.variantTitle} · `}Qty {i.quantity} · {formatMoney(i.unitPrice, c)} each</p>
+                  {canReturn && i.variantId && <div className="mt-2">{reviewed.has(i.id) ? <span className="text-xs text-success">✓ Reviewed</span> : <ReviewForm orderItemId={i.id} number={o.number} name={i.productName} />}</div>}
                 </div>
                 <p className="font-medium tabular-nums">{formatMoney(i.total, c)}</p>
               </li>
@@ -117,7 +120,9 @@ export default async function OrderPage({ params, searchParams }: { params: Prom
             {o.giftWrapTotal > 0 && <Row k="Gift wrap" v={formatMoney(o.giftWrapTotal, c)} />}
             {o.codFeeTotal > 0 && <Row k="COD fee" v={formatMoney(o.codFeeTotal, c)} />}
             {!o.taxInclusive && <Row k="Tax" v={formatMoney(o.taxTotal, c)} />}
-            <div className="flex justify-between border-t border-line pt-3 text-base font-semibold"><dt>Total</dt><dd className="tabular-nums">{formatMoney(o.grandTotal, c)}</dd></div>
+            {o.loyaltyTotal > 0 && <Row k="Reward points" v={`−${formatMoney(o.loyaltyTotal, c)}`} cls="text-success" />}
+            {o.giftCardTotal > 0 && <Row k="Gift card" v={`−${formatMoney(o.giftCardTotal, c)}`} cls="text-success" />}
+            <div className="flex justify-between border-t border-line pt-3 text-base font-semibold"><dt>{o.giftCardTotal + o.loyaltyTotal > 0 ? "Paid" : "Total"}</dt><dd className="tabular-nums">{formatMoney(o.grandTotal, c)}</dd></div>
             {o.taxInclusive && <p className="text-right text-xs text-muted">Includes {formatMoney(o.taxTotal, c)} GST</p>}
           </dl>
         </section>
@@ -129,7 +134,7 @@ export default async function OrderPage({ params, searchParams }: { params: Prom
           </div>
           <div className="rounded-[var(--radius-card)] border border-line bg-surface p-5 text-sm">
             <h3 className="mb-2 font-semibold">Payment</h3>
-            <p>{o.paymentMethod === "cod" ? "Cash on delivery" : "Online (Razorpay)"} · <span className="text-muted">{o.paymentStatus.toLowerCase().replace("_", " ")}</span></p>
+            <p>{o.paymentMethod === "cod" ? "Cash on delivery" : o.paymentMethod === "giftcard" ? "Gift card / points" : "Online (Razorpay)"} · <span className="text-muted">{o.paymentStatus.toLowerCase().replace("_", " ")}</span></p>
             {o.refunds.map((r) => (
               <p key={r.id} className="mt-1 text-xs text-muted">Refund {formatMoney(r.amount, r.currency)}: {r.status.toLowerCase()}</p>
             ))}

@@ -10,6 +10,7 @@ import { useToast } from "@/components/ui/toast";
 import { useShopper } from "@/components/store/shopper-context";
 import { ProductImage } from "@/components/store/product-image";
 import { addToCartAction } from "@/app/actions/cart";
+import { track } from "@/lib/track";
 
 type SuggestProduct = { id: string; slug: string; name: string; image: string | null; price: number; compareAt: number | null; currency: string; rating: number; ratingCount: number; inStock: boolean; franchise: string | null; singleVariantId: string | null };
 type SuggestResponse = { products: SuggestProduct[]; categories: { slug: string; name: string }[]; anime: { slug: string; name: string }[]; didYouMean: string | null; trending: string[] };
@@ -277,6 +278,7 @@ function SearchQuickAdd({ product, onNavigate }: { product: SuggestProduct; onNa
           const res = await addToCartAction(product.singleVariantId!, 1);
           if (!res.ok) return toast({ tone: "error", title: res.error });
           setCartCount(res.count);
+          track("add_to_cart", { variantId: product.singleVariantId!, quantity: 1 });
           toast({ title: "Added to cart", description: product.name, action: { label: "View cart", href: "/cart" } });
         })
       }

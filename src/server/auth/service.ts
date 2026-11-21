@@ -46,6 +46,16 @@ export async function registerUser(input: unknown) {
     },
   });
   await sendVerificationEmail(user);
+  try {
+    const { getStoreSettings } = await import("@/server/settings");
+    const bonus = (await getStoreSettings()).loyalty;
+    if (bonus.enabled && bonus.signupBonus > 0) {
+      const { addPoints } = await import("@/server/rewards/service");
+      await db.$transaction((tx) => addPoints(tx, user.id, bonus.signupBonus, "SIGNUP_BONUS"));
+    }
+  } catch (err) {
+    console.error("[auth] signup bonus", err);
+  }
   return user;
 }
 

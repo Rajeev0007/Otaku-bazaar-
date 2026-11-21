@@ -19,6 +19,22 @@ export const storeSettingsSchema = z.object({
   taxLabel: z.string().default("GST"),
   maxQtyPerLine: z.number().int().positive().default(10),
   giftWrapPrice: z.number().int().nonnegative().default(4_900),
+  loyalty: z
+    .object({
+      enabled: z.boolean().default(true),
+      pointsPer100: z.number().int().min(0).max(100).default(2), // points earned per ₹100 paid
+      pointValue: z.number().int().min(1).max(10_000).default(100), // paise per point (100 = ₹1)
+      minRedeem: z.number().int().min(0).default(50),
+      maxRedeemPercent: z.number().int().min(0).max(100).default(20),
+      signupBonus: z.number().int().min(0).default(0),
+    })
+    .default({}),
+  analytics: z
+    .object({
+      ga4Id: z.string().default(""),
+      metaPixelId: z.string().default(""),
+    })
+    .default({}),
   cod: z
     .object({
       enabled: z.boolean().default(true),
