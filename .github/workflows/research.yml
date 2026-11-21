@@ -1,0 +1,26 @@
+name: tmp-dep-research
+on: push
+jobs:
+  r:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: |
+          set +e
+          {
+          echo "## audit (current lock, prod)"; npm audit --omit=dev --json | node -e 'const a=JSON.parse(require("fs").readFileSync(0));for(const [n,v] of Object.entries(a.vulnerabilities||{}))console.log(n,v.severity,v.range,"fix:",JSON.stringify(v.fixAvailable),"via:",v.via.map(x=>typeof x==="string"?x:x.source).join(","))'
+          echo "## audit (all)"; npm audit --json | node -e 'const a=JSON.parse(require("fs").readFileSync(0));console.log(JSON.stringify(a.metadata.vulnerabilities))'
+          for p in next@15.5 next@latest @vercel/blob@latest prisma@6 @prisma/client@6 @prisma/config@6 prisma@latest zod@latest zod@3 react@19.1 react-dom@19.1 @aws-sdk/client-s3@latest; do echo "## $p"; npm view "$p" version 2>/dev/null | tail -3; done
+          echo "## @vercel/blob latest deps"; npm view @vercel/blob@latest dependencies engines --json
+          echo "## @vercel/blob versions"; npm view @vercel/blob versions --json | node -e 'console.log(JSON.parse(require("fs").readFileSync(0)).slice(-12).join(" "))'
+          for v in $(npm view prisma@6 version | awk '{print $NF}' | tr -d "'" | tail -1); do echo "## @prisma/config@$v deps"; npm view @prisma/config@$v dependencies --json; done
+          echo "## @prisma/config@latest deps"; npm view @prisma/config@latest version dependencies --json
+          echo "## next@15.5 latest deps postcss"; npm view next@15.5 dependencies --json | tail -15
+          echo "## undici latest 6/7"; npm view undici@6 version | tail -1; npm view undici@7 version | tail -1
+          echo "## @fastify/busboy latest"; npm view @fastify/busboy version
+          } > out.txt 2>&1
+          cat out.txt
+      - uses: actions/upload-artifact@v4
+        with: { name: out, path: out.txt }
