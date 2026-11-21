@@ -3,6 +3,8 @@ import { Footer } from "@/components/store/footer";
 import { MobileTabBar } from "@/components/store/mobile-tab-bar";
 import { HelpWidget } from "@/components/store/help-widget";
 import { ConsentAndAnalytics } from "@/components/store/analytics";
+import { ThemeRuntime } from "@/components/store/theme-runtime";
+import { themeBootScript } from "@/lib/themes";
 import { ShopperProvider } from "@/components/store/shopper-context";
 import { getShopperSummary } from "@/server/shopper";
 import { getStoreSettings } from "@/server/settings";
@@ -35,6 +37,9 @@ export default async function StoreLayout({ children }: { children: React.ReactN
 
   return (
     <ShopperProvider initial={shopper}>
+      {/* Applies the store/shopper theme before the page paints. */}
+      <script dangerouslySetInnerHTML={{ __html: themeBootScript(settings.appearance.theme, settings.appearance.shopperChoice) }} />
+      <ThemeRuntime defaultTheme={settings.appearance.theme} allowChoice={settings.appearance.shopperChoice} wallpapers={settings.appearance.wallpapers} />
       <Header />
       <main id="main" className="min-h-[60vh]">
         {children}

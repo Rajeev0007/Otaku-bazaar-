@@ -51,7 +51,7 @@ export function ProductCard({ product, priority, layout = "grid", className }: {
   }
 
   return (
-    <article className={cn("group relative flex flex-col", className)}>
+    <article className={cn("anime-card group relative flex flex-col", className)}>
       <div className="relative aspect-[4/5] overflow-hidden rounded-[var(--radius-card)] bg-surface-2">
         {img && (
           <ProductImage

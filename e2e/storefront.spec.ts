@@ -93,3 +93,19 @@ test("mobile product page has sticky buy bar and tab bar @mobile", async ({ page
   await expect(page.getByText(/Select size|Add to cart/).last()).toBeVisible();
   await page.screenshot(shot("pdp-mobile-sticky"));
 });
+
+test("shopper switches to an anime theme and it sticks after reload", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Change theme" }).click();
+  await page.getByRole("menuitemradio", { name: /Cursed Energy/ }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-anime", "cursed");
+  await expect(page.locator("canvas")).toHaveCount(1);
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("data-anime", "cursed");
+  // Preview links (?theme=) override the saved choice for that page.
+  await page.goto("/shop?theme=manga");
+  await expect(page.locator("html")).toHaveAttribute("data-anime", "manga");
+  await page.getByRole("button", { name: "Change theme" }).click();
+  await page.getByRole("menuitemradio", { name: /Classic dark/ }).click();
+  await expect(page.locator("html")).not.toHaveAttribute("data-anime", /.+/);
+});

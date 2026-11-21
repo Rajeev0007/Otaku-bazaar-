@@ -148,3 +148,188 @@
 }
 
 dialog::backdrop { background: rgb(0 0 0 / 0.6); backdrop-filter: blur(4px); }
+
+/* ───────────── Anime themes ─────────────
+   Set on <html data-anime="…">. Each theme swaps the palette and adds original decorations
+   (speed lines, kanji watermarks, brush underlines, comic panels). The animated wallpapers are
+   drawn on a canvas by <AnimeWallpaper>. No franchise artwork is used. */
+
+[data-anime="shinobi"] {
+  --bg: #0f0c0a;
+  --surface: #17120f;
+  --surface-2: #211a15;
+  --surface-3: #2c231c;
+  --line: rgb(255 170 90 / 0.1);
+  --line-strong: rgb(255 170 90 / 0.22);
+  --fg: #fbf3ea;
+  --muted: #b7a796;
+  --subtle: #85776a;
+  --accent: #ff7a1a;
+  --accent-2: #e8352b;
+  --accent-fg: #160b03;
+  --accent-soft: rgb(255 122 26 / 0.15);
+  --gold: #f4c25b;
+  --glass: rgb(23 18 15 / 0.76);
+  --glow: 0 0 0 1px rgb(255 122 26 / 0.35), 0 12px 40px -12px rgb(255 122 26 / 0.55);
+  --kanji: "忍";
+  --wash: radial-gradient(1200px 600px at 85% -10%, rgb(255 122 26 / 0.16), transparent 60%), radial-gradient(900px 500px at -10% 110%, rgb(63 143 78 / 0.12), transparent 60%);
+  color-scheme: dark;
+}
+
+[data-anime="cursed"] {
+  --bg: #07060f;
+  --surface: #0f0d1c;
+  --surface-2: #171429;
+  --surface-3: #211d38;
+  --line: rgb(160 130 255 / 0.12);
+  --line-strong: rgb(160 130 255 / 0.26);
+  --fg: #f1efff;
+  --muted: #a49fc4;
+  --subtle: #716c93;
+  --accent: #8b5cf6;
+  --accent-2: #2563eb;
+  --accent-fg: #ffffff;
+  --accent-soft: rgb(139 92 246 / 0.16);
+  --gold: #c4b5fd;
+  --glass: rgb(15 13 28 / 0.74);
+  --glow: 0 0 0 1px rgb(139 92 246 / 0.4), 0 14px 44px -12px rgb(99 102 241 / 0.65);
+  --kanji: "呪";
+  --wash: radial-gradient(1100px 600px at 90% -10%, rgb(139 92 246 / 0.2), transparent 60%), radial-gradient(900px 600px at 0% 100%, rgb(37 99 235 / 0.16), transparent 60%);
+  color-scheme: dark;
+}
+
+[data-anime="sakura"] {
+  --bg: #140b12;
+  --surface: #1d111a;
+  --surface-2: #271724;
+  --surface-3: #331f2f;
+  --line: rgb(255 160 210 / 0.1);
+  --line-strong: rgb(255 160 210 / 0.24);
+  --fg: #fff1f7;
+  --muted: #c9a9bb;
+  --subtle: #927788;
+  --accent: #ff7eb6;
+  --accent-2: #c084fc;
+  --accent-fg: #2a0716;
+  --accent-soft: rgb(255 126 182 / 0.15);
+  --gold: #ffd6a5;
+  --glass: rgb(29 17 26 / 0.76);
+  --glow: 0 0 0 1px rgb(255 126 182 / 0.35), 0 12px 40px -12px rgb(255 126 182 / 0.5);
+  --kanji: "桜";
+  --wash: radial-gradient(1000px 520px at 80% -10%, rgb(255 126 182 / 0.16), transparent 60%), radial-gradient(800px 500px at 10% 110%, rgb(192 132 252 / 0.12), transparent 60%);
+  color-scheme: dark;
+}
+
+[data-anime="neon"] {
+  --bg: #05060a;
+  --surface: #0b0e16;
+  --surface-2: #121622;
+  --surface-3: #1a2030;
+  --line: rgb(0 229 255 / 0.12);
+  --line-strong: rgb(0 229 255 / 0.28);
+  --fg: #e9fbff;
+  --muted: #8fa6b4;
+  --subtle: #5f7482;
+  --accent: #00e5ff;
+  --accent-2: #ff2bd6;
+  --accent-fg: #001318;
+  --accent-soft: rgb(0 229 255 / 0.13);
+  --gold: #ffe45c;
+  --glass: rgb(11 14 22 / 0.74);
+  --glow: 0 0 0 1px rgb(0 229 255 / 0.45), 0 0 28px -4px rgb(0 229 255 / 0.55), 0 0 60px -20px rgb(255 43 214 / 0.6);
+  --kanji: "電";
+  --wash: radial-gradient(900px 500px at 100% 0%, rgb(255 43 214 / 0.14), transparent 60%), radial-gradient(900px 500px at 0% 100%, rgb(0 229 255 / 0.12), transparent 60%);
+  --radius-card: 0.75rem;
+  color-scheme: dark;
+}
+
+[data-anime="manga"] {
+  --bg: #f4f1ea;
+  --surface: #fffdf8;
+  --surface-2: #ece8de;
+  --surface-3: #e0dbcf;
+  --line: rgb(11 11 11 / 0.14);
+  --line-strong: rgb(11 11 11 / 0.6);
+  --fg: #0b0b0b;
+  --muted: #4d4a45;
+  --subtle: #807b72;
+  --accent: #e11d2e;
+  --accent-2: #0b0b0b;
+  --accent-fg: #ffffff;
+  --accent-soft: rgb(225 29 46 / 0.1);
+  --gold: #b7791f;
+  --success: #15803d;
+  --warning: #b45309;
+  --danger: #c81e1e;
+  --glass: rgb(255 253 248 / 0.86);
+  --shadow: 4px 4px 0 0 #0b0b0b;
+  --glow: 4px 4px 0 0 #0b0b0b;
+  --kanji: "漫";
+  --wash: radial-gradient(circle at 1px 1px, rgb(11 11 11 / 0.07) 1px, transparent 1.4px) 0 0 / 14px 14px;
+  --radius-card: 0.5rem;
+  color-scheme: light;
+}
+
+@layer components {
+  /* Soft colour wash behind everything (the canvas wallpaper sits on top of it). */
+  [data-anime] body { background: var(--wash), var(--bg); background-attachment: fixed; }
+
+  /* Primary buttons get a two-tone gradient and glow. */
+  [data-anime] .btn-primary { background: linear-gradient(120deg, var(--accent), var(--accent-2)); box-shadow: var(--glow); }
+  [data-anime="manga"] .btn-primary { background: var(--accent); border: 2px solid #0b0b0b; }
+  [data-anime="manga"] .btn-primary:hover { transform: translate(-1px, -1px); box-shadow: 6px 6px 0 0 #0b0b0b; }
+
+  /* Section titles: brush-stroke underline. */
+  [data-anime] .section-title { position: relative; display: inline-block; padding-bottom: 0.35rem; }
+  [data-anime] .section-title::after {
+    content: ""; position: absolute; left: -0.15rem; right: 15%; bottom: 0; height: 0.42rem; border-radius: 999px 40% 999px 30%;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2) 70%, transparent);
+    transform: skewX(-18deg); opacity: 0.85;
+  }
+  [data-anime="manga"] .section-title { font-weight: 800; text-transform: uppercase; letter-spacing: 0.01em; }
+  [data-anime="manga"] .section-title::after { background: #0b0b0b; height: 0.28rem; right: 30%; }
+  [data-anime="neon"] .section-title { text-shadow: 0 0 18px rgb(0 229 255 / 0.45); }
+
+  /* Eyebrow labels become little "sticker" tags. */
+  [data-anime] .eyebrow { color: var(--accent); }
+  [data-anime="manga"] .eyebrow { color: #0b0b0b; }
+
+  /* Product cards: glowing frame on hover; manga turns them into comic panels. */
+  [data-anime] .anime-card > :first-child { transition: box-shadow 0.35s var(--ease-out-expo), transform 0.35s var(--ease-out-expo); }
+  [data-anime] .anime-card:hover > :first-child { box-shadow: var(--glow); transform: translateY(-3px); }
+  [data-anime="manga"] .anime-card > :first-child { border: 2px solid #0b0b0b; box-shadow: 4px 4px 0 0 #0b0b0b; }
+  [data-anime="manga"] .anime-card:hover > :first-child { box-shadow: 7px 7px 0 0 var(--accent); transform: translate(-2px, -2px); }
+
+  /* Hero: speed lines + a big kanji watermark per theme. */
+  .anime-hero-deco { display: none; }
+  [data-anime] .anime-hero-deco { display: block; position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 1; }
+  [data-anime] .anime-hero-deco::before {
+    content: ""; position: absolute; inset: -40%;
+    background: repeating-conic-gradient(from 0deg at 72% 45%, rgb(255 255 255 / 0.07) 0deg 1.2deg, transparent 1.2deg 7deg);
+    mask-image: radial-gradient(circle at 72% 45%, transparent 18%, #000 60%);
+    -webkit-mask-image: radial-gradient(circle at 72% 45%, transparent 18%, #000 60%);
+    animation: speedlines 14s linear infinite;
+  }
+  [data-anime] .anime-hero-deco::after {
+    content: var(--kanji); position: absolute; right: 4%; bottom: -6%; font-size: min(38vw, 22rem); line-height: 1; font-weight: 900;
+    color: transparent; -webkit-text-stroke: 2px color-mix(in srgb, var(--accent) 70%, transparent);
+    opacity: 0.35; filter: drop-shadow(0 0 24px var(--accent-soft));
+    font-family: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", "Noto Serif CJK JP", serif;
+  }
+  [data-anime="manga"] .anime-hero-deco::before { background: repeating-conic-gradient(from 0deg at 72% 45%, rgb(0 0 0 / 0.16) 0deg 1deg, transparent 1deg 6deg); }
+  [data-anime="manga"] .anime-hero-deco::after { -webkit-text-stroke: 3px #fff; opacity: 0.5; }
+  [data-anime="neon"] .anime-hero-deco::after { -webkit-text-stroke: 2px var(--accent); filter: drop-shadow(0 0 10px var(--accent)) drop-shadow(0 0 30px var(--accent-2)); opacity: 0.55; animation: neon-flicker 6s steps(1) infinite; }
+  [data-anime] .anime-hero-frame { box-shadow: var(--glow); }
+  [data-anime="manga"] .anime-hero-frame { border: 3px solid #0b0b0b; box-shadow: 6px 6px 0 0 #0b0b0b; }
+
+  /* Page heading accent on listing/product pages. */
+  [data-anime] h1 { text-shadow: 0 2px 30px var(--accent-soft); }
+  [data-anime="manga"] h1 { text-shadow: none; }
+
+  [data-anime] ::-webkit-scrollbar { width: 10px; height: 10px; }
+  [data-anime] ::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--accent) 55%, transparent); border-radius: 999px; border: 2px solid var(--bg); }
+  [data-anime] ::-webkit-scrollbar-track { background: var(--bg); }
+}
+
+@keyframes speedlines { to { transform: rotate(360deg); } }
+@keyframes neon-flicker { 0%, 100% { opacity: 0.55; } 47% { opacity: 0.55; } 48% { opacity: 0.2; } 49% { opacity: 0.6; } 72% { opacity: 0.55; } 73% { opacity: 0.25; } 74% { opacity: 0.55; } }

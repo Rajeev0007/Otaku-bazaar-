@@ -7,6 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Checkbox, Field, FormError, Input, Textarea } from "@/components/ui/field";
 import { useToast } from "@/components/ui/toast";
 import { saveSettingsAction } from "@/app/admin/actions";
+import { THEMES, type ThemeId } from "@/lib/themes";
+import { Swatch } from "@/components/store/theme-runtime";
+import { cn } from "@/lib/utils";
 
 const SOCIALS = [
   ["instagram", "Instagram", "@theotakubazaar"],
@@ -64,6 +67,9 @@ export function SettingsForm({ initial }: { initial: StoreSettings }) {
     goPhone: initial.grievanceOfficer.phone,
     maintenanceMode: initial.maintenanceMode,
     maintenanceMessage: initial.maintenanceMessage,
+    theme: initial.appearance.theme as ThemeId,
+    shopperChoice: initial.appearance.shopperChoice,
+    wallpapers: initial.appearance.wallpapers,
   });
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
@@ -103,6 +109,7 @@ export function SettingsForm({ initial }: { initial: StoreSettings }) {
         grievanceOfficer: { name: s.goName, designation: s.goDesignation, email: s.goEmail, phone: s.goPhone },
         maintenanceMode: s.maintenanceMode,
         maintenanceMessage: s.maintenanceMessage,
+        appearance: { theme: s.theme, shopperChoice: s.shopperChoice, wallpapers: s.wallpapers },
       });
       if (!r.ok) return setError(r.error + (r.fieldErrors ? ` ${Object.entries(r.fieldErrors).map(([k, v]) => `${k}: ${v}`).join(", ")}` : ""));
       toast({ title: "Settings saved" });
@@ -114,6 +121,31 @@ export function SettingsForm({ initial }: { initial: StoreSettings }) {
   return (
     <div className="grid max-w-5xl gap-6 lg:grid-cols-2">
       <div className="lg:col-span-2"><FormError message={error} /></div>
+      <section className={`${box} lg:col-span-2`}>
+        <div>
+          <h2 className="font-semibold">Appearance &amp; anime themes</h2>
+          <p className="mt-1 text-xs text-muted">Pick the store&apos;s default look. All artwork and animations are original, so they&apos;re safe to use commercially. Use Preview to see a theme before saving.</p>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4" role="radiogroup" aria-label="Default theme">
+          {THEMES.map((t) => (
+            <div key={t.id} className={cn("rounded-xl border p-3 transition", s.theme === t.id ? "border-accent bg-accent-soft" : "border-line hover:border-line-strong")}>
+              <button type="button" role="radio" aria-checked={s.theme === t.id} onClick={() => setS((x) => ({ ...x, theme: t.id }))} className="flex w-full items-center gap-3 text-left">
+                <Swatch colors={t.swatch} size={36} />
+                <span className="min-w-0">
+                  <span className="block text-sm font-semibold">{t.name}</span>
+                  <span className="block text-xs text-muted">{t.tagline}</span>
+                </span>
+              </button>
+              <a href={`/?theme=${t.id}`} target="_blank" rel="noopener" className="mt-2 inline-block text-xs font-medium text-accent hover:underline">Preview ↗</a>
+            </div>
+          ))}
+        </div>
+        <div className="flex flex-wrap gap-x-8 gap-y-2">
+          <Checkbox label="Let shoppers choose their own theme (palette button in the header)" checked={s.shopperChoice} onChange={set("shopperChoice")} />
+          <Checkbox label="Animated backgrounds (falling leaves, petals, flames, neon rain)" checked={s.wallpapers} onChange={set("wallpapers")} />
+        </div>
+        <p className="text-xs text-muted">Animations switch off automatically for visitors who turn on &quot;reduce motion&quot; on their device, and pause when the tab isn&apos;t visible.</p>
+      </section>
       <section className={box}>
         <h2 className="font-semibold">Brand</h2>
         <Field label="Store name" htmlFor="name"><Input id="name" value={s.name} onChange={set("name")} /></Field>

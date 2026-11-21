@@ -19,6 +19,10 @@ Premium anime merchandise store: Next.js 15 (App Router) · TypeScript · Tailwi
 - SEO: per-page metadata, canonical URLs, Open Graph, sitemap.xml, robots.txt and Organization JSON-LD.
 - Editable policy page templates with clear `[placeholders]`. No business details are invented.
 
+**Anime themes**
+- Seven store themes (Classic dark/light, Shinobi Sunset, Cursed Energy, Sakura Night, Neo Tokyo, Manga Ink) with original animated backgrounds drawn on a canvas, speed-line and kanji hero decorations, brush-stroke headings and glowing or comic-panel product cards.
+- The owner sets the default in Store settings; shoppers can pick their own if allowed. Animations respect "reduce motion" and pause in background tabs.
+
 **Orders and customer care**
 - Checkout with coupons, gift cards and reward points; Razorpay (UPI/cards/net banking/wallets) and cash on delivery; order tracking, cancellations, invoices, returns/exchanges and refunds.
 - Gift cards: issued from the admin (optionally emailed), checked from My account, used at checkout (they can cover the whole order) and restored if the order is cancelled. Gift-card-paid returns are refunded as a new gift card.

@@ -34,7 +34,7 @@ export function HeroCarousel({ slides }: { slides: Slide[] }) {
       onBlur={() => setPaused(false)}
     >
       <div
-        className="relative h-[58vh] min-h-[420px] max-h-[720px] sm:min-h-[480px] overflow-hidden rounded-[1.75rem] bg-surface sm:h-[62vh]"
+        className="anime-hero-frame relative h-[58vh] min-h-[420px] max-h-[720px] sm:min-h-[480px] overflow-hidden rounded-[1.75rem] bg-surface sm:h-[62vh]"
         onTouchStart={(e) => (touch.current = e.touches[0]?.clientX ?? null)}
         onTouchEnd={(e) => {
           if (touch.current === null) return;
@@ -48,7 +48,8 @@ export function HeroCarousel({ slides }: { slides: Slide[] }) {
             <ProductImage src={s.imageUrl} alt="" fill priority={idx === 0} sizes="100vw" className={cn("object-cover transition-transform duration-[7000ms] ease-out", idx === i ? "scale-105" : "scale-100")} />
             <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent sm:hidden" />
-            <div className="relative flex h-full max-w-2xl flex-col justify-end p-6 pb-16 sm:justify-center sm:p-12 lg:p-16">
+            <div className="anime-hero-deco" aria-hidden />
+            <div className="relative z-[2] flex h-full max-w-2xl flex-col justify-end p-6 pb-16 sm:justify-center sm:p-12 lg:p-16">
               <p className={cn("eyebrow mb-4 text-white/70", idx === i && "animate-fade-up")}>The Otaku Bazaar</p>
               <h1 className={cn("text-4xl font-semibold leading-[1.05] text-white sm:text-5xl lg:text-6xl", idx === i && "animate-fade-up [animation-delay:80ms]")}>{s.title}</h1>
               {s.subtitle && <p className={cn("mt-4 max-w-md text-base text-white/75 sm:text-lg", idx === i && "animate-fade-up [animation-delay:160ms]")}>{s.subtitle}</p>}
@@ -66,7 +67,7 @@ export function HeroCarousel({ slides }: { slides: Slide[] }) {
           </div>
         ))}
         {n > 1 && (
-          <div className="absolute bottom-5 left-6 right-6 flex items-center justify-between sm:left-12 lg:left-16">
+          <div className="absolute bottom-5 left-6 right-6 z-[2] flex items-center justify-between sm:left-12 lg:left-16">
             <div className="flex gap-2">
               {slides.map((s, idx) => (
                 <button key={s.id} onClick={() => setI(idx)} className="group relative h-1 w-10 overflow-hidden rounded-full bg-white/25" aria-label={`Go to slide ${idx + 1}`} aria-current={idx === i}>

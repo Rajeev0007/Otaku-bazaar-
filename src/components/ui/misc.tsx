@@ -134,7 +134,7 @@ export function SectionHeading({ eyebrow, title, subtitle, href, linkLabel = "Vi
     <div className="mb-6 flex items-end justify-between gap-4">
       <div>
         {eyebrow && <p className="eyebrow mb-2">{eyebrow}</p>}
-        <h2 className="text-2xl font-semibold sm:text-[1.75rem]">{title}</h2>
+        <h2 className="section-title text-2xl font-semibold sm:text-[1.75rem]">{title}</h2>
         {subtitle && <p className="mt-1.5 text-sm text-muted">{subtitle}</p>}
       </div>
       {href && (

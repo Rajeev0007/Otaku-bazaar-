@@ -9,7 +9,7 @@ import { formatMoney } from "@/lib/money";
 import { Icon } from "@/components/ui/icon";
 import { useShopper } from "@/components/store/shopper-context";
 import { SearchBox } from "@/components/store/search-box";
-import { ThemeToggle } from "@/components/store/theme-toggle";
+import { ThemePicker } from "@/components/store/theme-runtime";
 import { CartDrawer } from "@/components/store/cart-drawer";
 import { ProductImage } from "@/components/store/product-image";
 
@@ -17,7 +17,7 @@ type Cat = { slug: string; name: string; imageUrl: string | null; children: { sl
 type Franchise = { slug: string; name: string; isTrending: boolean; imageUrl: string | null };
 type Featured = { slug: string; name: string; image: string | null; price: number; currency: string };
 
-export function HeaderClient({ storeName, logoUrl, categories, franchises, featured }: { storeName: string; logoUrl: string; categories: Cat[]; franchises: Franchise[]; featured: Featured[] }) {
+export function HeaderClient({ storeName, logoUrl, categories, franchises, featured, themePicker, wallpapers }: { themePicker: boolean; wallpapers: boolean; storeName: string; logoUrl: string; categories: Cat[]; franchises: Franchise[]; featured: Featured[] }) {
   const [menu, setMenu] = useState<null | "shop" | "anime">(null);
   const [drawer, setDrawer] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -83,7 +83,7 @@ export function HeaderClient({ storeName, logoUrl, categories, franchises, featu
 
           <div className="ml-auto flex items-center gap-1 sm:gap-1.5">
             <SearchBox />
-            <ThemeToggle className="hidden sm:grid" />
+            {themePicker && <ThemePicker className="hidden sm:block" wallpapers={wallpapers} />}
             <Link href={user ? "/account" : "/login"} className="hidden h-10 w-10 place-items-center rounded-full hover:bg-surface-2 md:grid" aria-label={user ? "My account" : "Sign in"}>
               <Icon name="user" size={21} />
             </Link>
@@ -222,7 +222,7 @@ export function HeaderClient({ storeName, logoUrl, categories, franchises, featu
             <Link href={user ? "/account" : "/login"} className="flex items-center gap-2 text-sm font-medium">
               <Icon name="user" size={18} /> {user ? (user.name ?? "My account") : "Sign in / Register"}
             </Link>
-            <ThemeToggle />
+            {themePicker && <ThemePicker wallpapers={wallpapers} />}
           </div>
         </nav>
       </div>
