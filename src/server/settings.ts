@@ -19,6 +19,13 @@ export const storeSettingsSchema = z.object({
   taxLabel: z.string().default("GST"),
   maxQtyPerLine: z.number().int().positive().default(10),
   giftWrapPrice: z.number().int().nonnegative().default(4_900),
+  cod: z
+    .object({
+      enabled: z.boolean().default(true),
+      maxOrder: z.number().int().nonnegative().default(500_000), // ₹5,000
+      fee: z.number().int().nonnegative().default(0),
+    })
+    .default({}),
   announcements: z
     .array(z.object({ text: z.string(), href: z.string().optional() }))
     .default([

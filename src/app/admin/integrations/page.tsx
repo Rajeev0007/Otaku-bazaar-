@@ -84,8 +84,37 @@ export default async function IntegrationsPage() {
           )}
         </Card>
 
-        <Card title="Payments & shipping" description="Razorpay, Stripe and Shiprocket">
-          <p className="text-sm text-muted">These arrive with checkout (next phase) and will be connected from this page too.</p>
+        <Card
+          title="Payments (Razorpay)"
+          description="UPI, cards, net banking and wallets. Customers pay on Razorpay's secure page; card details never touch this site."
+          actions={<span className="flex gap-2">{status.razorpay !== "off" && <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${status.razorpayKeyId.startsWith("rzp_live_") ? "bg-success/15 text-success" : "bg-warning/15 text-warning"}`}>{status.razorpayKeyId.startsWith("rzp_live_") ? "LIVE" : "TEST MODE"}</span>}<Badge s={status.razorpay} /></span>}
+          className="lg:col-span-2"
+        >
+          {status.razorpay === "env" ? (
+            <p className="text-sm text-muted">Configured through RAZORPAY_* environment variables.</p>
+          ) : (
+            <SimpleForm action={saveIntegrationsAction} className="grid gap-3 sm:grid-cols-2">
+              <ol className="list-decimal space-y-1 pl-5 text-xs text-muted sm:col-span-2">
+                <li>Razorpay Dashboard → switch to <b>Test Mode</b> first → Account &amp; Settings → <b>API Keys</b> → Generate Key. Paste both values below.</li>
+                <li>Account &amp; Settings → <b>Webhooks</b> → Add New Webhook. URL: <code className="break-all rounded bg-surface-2 px-1">{appUrl("/api/webhooks/razorpay")}</code>. Create a secret, tick <b>payment.captured</b>, <b>payment.failed</b> and <b>order.paid</b>, then paste the same secret below.</li>
+                <li>Place a test order with a <a href="https://razorpay.com/docs/payments/payments/test-card-details/" target="_blank" rel="noreferrer" className="underline">Razorpay test card or UPI ID</a>. When your account is activated, repeat with <b>Live Mode</b> keys.</li>
+              </ol>
+              <Field label="Key ID" htmlFor="razorpayKeyId" hint="rzp_test_… or rzp_live_…">
+                <Input id="razorpayKeyId" name="razorpayKeyId" defaultValue={status.razorpayKeyId} autoComplete="off" />
+              </Field>
+              <Field label="Key secret" htmlFor="razorpayKeySecret" hint={status.razorpay === "admin" ? "Saved. Leave blank to keep it." : undefined}>
+                <Input id="razorpayKeySecret" name="razorpayKeySecret" type="password" autoComplete="off" placeholder={status.razorpay === "admin" ? "•••••••• saved" : ""} />
+              </Field>
+              <Field label="Webhook secret" htmlFor="razorpayWebhookSecret" hint={status.razorpayWebhook ? "Saved. Leave blank to keep it." : "Strongly recommended: confirms payments even if the customer closes the page."} className="sm:col-span-2">
+                <Input id="razorpayWebhookSecret" name="razorpayWebhookSecret" type="password" autoComplete="off" placeholder={status.razorpayWebhook ? "•••••••• saved" : ""} />
+              </Field>
+              {status.razorpay !== "off" && <Checkbox name="clearRazorpay" label="Disconnect Razorpay" className="sm:col-span-2" />}
+            </SimpleForm>
+          )}
+        </Card>
+
+        <Card title="Cash on delivery" description="Turn COD on or off, and set the order limit and fee.">
+          <p className="text-sm text-muted">Managed in <a href="/admin/settings" className="underline">Store settings → Cash on delivery</a>.</p>
         </Card>
       </div>
     </>

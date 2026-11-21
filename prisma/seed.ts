@@ -350,6 +350,12 @@ async function seedAccountsAndReviews() {
     const u = await db.user.upsert({ where: { email }, create: { email, name, passwordHash: password, isStaff: true, emailVerifiedAt: new Date(), wishlists: { create: {} } }, update: { isStaff: true } });
     await db.userRole.upsert({ where: { userId_roleId: { userId: u.id, roleId: role.id } }, create: { userId: u.id, roleId: role.id }, update: {} });
   }
+  // Development coupons for trying checkout
+  for (const c of [
+    { code: "WELCOME10", type: "PERCENT" as const, value: 10, maxDiscount: 20000, description: "Demo: 10% off, max ₹200" },
+    { code: "FLAT100", type: "FIXED" as const, value: 10000, minSubtotal: 79900, description: "Demo: ₹100 off over ₹799" },
+    { code: "FREESHIP", type: "FREE_SHIPPING" as const, value: 0, description: "Demo: free shipping" },
+  ]) await db.coupon.upsert({ where: { code: c.code }, create: c, update: {} });
   const names = ["Riya S.", "Arjun K.", "Neha P.", "Vikram R.", "Ishaan M.", "Tanvi G.", "Aditya B.", "Zoya F."];
   const customers = [];
   for (const [i, name] of names.entries()) {

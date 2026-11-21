@@ -15,6 +15,9 @@ export async function getSetupStatus(): Promise<SetupItem[]> {
   ]);
   const placeholderPages = pages.filter((p) => /\[[^\]\n]{2,60}\](?!\()/.test(p.body)).length;
   return [
+    { label: "Online payments (Razorpay)", ok: !!integ.razorpay, required: true, fix: "Admin → Integrations → Payments. Until then only cash on delivery works.", href: "/admin/integrations" },
+    { label: "Razorpay webhook secret", ok: integ.status.razorpayWebhook, required: true, fix: "Admin → Integrations → Payments → Webhook secret", href: "/admin/integrations" },
+    { label: "Razorpay live mode", ok: integ.razorpay?.mode === "live", required: false, fix: "Switch to live keys once Razorpay activates your account", href: "/admin/integrations" },
     { label: "Email sending (Resend)", ok: integ.status.email === "admin" || integ.status.email === "env", required: true, fix: "Admin → Integrations → Email. Needed for verification and password-reset emails.", href: "/admin/integrations" },
     { label: "Google sign-in", ok: integ.status.google === "admin" || integ.status.google === "env", required: false, fix: "Optional: Admin → Integrations → Google", href: "/admin/integrations" },
     { label: "Logo, name and announcement bar", ok: s.logoUrl !== "" && s.name !== "", required: false, fix: "Admin → Store settings → Brand", href: "/admin/settings" },

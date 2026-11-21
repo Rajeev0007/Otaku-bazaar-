@@ -41,7 +41,9 @@ The dashboard shows a **Launch setup** checklist. Each item links to the right s
 
 | Admin page | What you set |
 |---|---|
-| **Integrations** | Email (Resend API key and sender address), Google sign-in, image storage status |
+| **Integrations** | **Payments (Razorpay keys + webhook)**, email (Resend), Google sign-in, image storage status |
+| **Orders** | Fulfil, mark shipped with tracking number, delivered, cancel and refund; invoices, packing slips, CSV export |
+| **Coupons** | % off, ₹ off, free shipping, buy-1-get-1, with limits, dates and category/anime rules |
 | **Store settings** | Store name, logo, announcement bar, owner, support email/phone/WhatsApp, **social links**, business details, grievance officer, shipping and tax display, maintenance mode, demo catalog on/off |
 | **Pages & policies** | Terms, Privacy, Shipping, Returns, Cancellation, Payment, Grievance, Cookies, Disclaimer, IP, About, Contact |
 | **Homepage** | Banners and the order of homepage sections |
@@ -49,6 +51,12 @@ The dashboard shows a **Launch setup** checklist. Each item links to the right s
 | **Products / Inventory** | Your catalog, photos, variants and stock |
 | **Customers, Reviews & Q&A, Newsletter** | Day-to-day operations, CSV exports |
 | **Staff & roles** | Give team members access with limited permissions |
+
+## Take payments
+
+1. Cash on delivery works immediately (Store settings → Cash on delivery sets the limit and fee).
+2. For UPI, cards, net banking and wallets: **Admin → Integrations → Payments**. Paste your Razorpay **test** Key ID and secret, add the webhook URL shown there in Razorpay with a secret, and save. Place a test order.
+3. When Razorpay activates your account, replace them with **live** keys. The checkout shows "TEST MODE" until you do.
 
 ## Optional
 

@@ -30,6 +30,7 @@ const cartInclude = {
               status: true,
               currency: true,
               categoryId: true,
+              franchiseId: true,
               franchise: { select: { name: true } },
               images: { orderBy: { position: "asc" }, take: 1, select: { url: true, alt: true } },
             },

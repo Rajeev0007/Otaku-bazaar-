@@ -7,15 +7,16 @@ const mediaHost = process.env.MEDIA_PUBLIC_HOST; // e.g. cdn.theotakubazaar.com
 const csp = [
   "default-src 'self'",
   // Next.js injects inline bootstrap scripts; 'unsafe-eval' only in dev for React Refresh.
-  `script-src 'self' 'unsafe-inline'${isProd ? "" : " 'unsafe-eval'"}`,
+  `script-src 'self' 'unsafe-inline'${isProd ? "" : " 'unsafe-eval'"} https://checkout.razorpay.com`,
+  "frame-src https://api.razorpay.com https://checkout.razorpay.com",
   "style-src 'self' 'unsafe-inline'",
-  `img-src 'self' data: blob:${mediaHost ? ` https://${mediaHost}` : ""} https://*.public.blob.vercel-storage.com https://lh3.googleusercontent.com`,
+  `img-src 'self' data: blob:${mediaHost ? ` https://${mediaHost}` : ""} https://*.public.blob.vercel-storage.com https://lh3.googleusercontent.com https://*.razorpay.com`,
   `media-src 'self'${mediaHost ? ` https://${mediaHost}` : ""} https://*.public.blob.vercel-storage.com`,
   "font-src 'self' data:",
-  "connect-src 'self'",
+  "connect-src 'self' https://api.razorpay.com https://lumberjack.razorpay.com",
   "frame-ancestors 'none'",
   "base-uri 'self'",
-  "form-action 'self' https://accounts.google.com",
+  "form-action 'self' https://accounts.google.com https://api.razorpay.com",
   "object-src 'none'",
 ].join("; ");
 

@@ -434,3 +434,120 @@ export async function unsubscribeAction(id: string): Promise<AdminResult> {
     return { ok: true, message: "Unsubscribed." };
   });
 }
+
+// ── Orders ──
+
+export async function updateOrderStatusAction(orderId: string, data: Record<string, unknown>): Promise<AdminResult> {
+  return guarded("orders.write", async (actorId) => {
+    const { updateOrderStatus, OrderError } = await import("@/server/orders/service");
+    const input = z
+      .object({
+        status: z.enum(["PROCESSING", "PACKED", "SHIPPED", "IN_TRANSIT", "OUT_FOR_DELIVERY", "DELIVERED", "DELAYED", "DELIVERY_FAILED", "RETURNED"]),
+        message: z.string().trim().max(300).optional(),
+        carrier: z.string().trim().max(60).optional(),
+        trackingNumber: z.string().trim().max(80).optional(),
+        trackingUrl: z.union([z.literal(""), z.string().trim().url().max(400)]).optional(),
+      })
+      .parse(data);
+    try {
+      await updateOrderStatus(z.string().max(40).parse(orderId), input.status, { actorId, ...input });
+    } catch (err) {
+      if (err instanceof OrderError) return { ok: false, error: err.message };
+      throw err;
+    }
+    await audit({ actorId, action: "order.status", entityType: "Order", entityId: orderId, data: { status: input.status } });
+    revalidatePath(`/admin/orders/${orderId}`);
+    return { ok: true, message: "Order updated. The customer has been emailed." };
+  });
+}
+
+export async function adminCancelOrderAction(orderId: string, data: Record<string, unknown>): Promise<AdminResult> {
+  return guarded("orders.refund", async (actorId) => {
+    const { cancelOrder, OrderError } = await import("@/server/orders/service");
+    const reason = z.string().trim().min(3, "Enter a reason").max(300).parse(data.reason);
+    try {
+      const r = await cancelOrder(z.string().max(40).parse(orderId), { reason, actorId });
+      await audit({ actorId, action: "order.cancel", entityType: "Order", entityId: orderId, data: { reason } });
+      revalidatePath(`/admin/orders/${orderId}`);
+      return { ok: true, message: r.refundId ? "Cancelled, stock returned and a full refund started." : "Cancelled and stock returned." };
+    } catch (err) {
+      if (err instanceof OrderError) return { ok: false, error: err.message };
+      throw err;
+    }
+  });
+}
+
+export async function retryRefundAction(refundId: string): Promise<AdminResult> {
+  return guarded("orders.refund", async (actorId) => {
+    const { processRefund } = await import("@/server/orders/service");
+    const r = await processRefund(z.string().max(40).parse(refundId));
+    await audit({ actorId, action: "refund.retry", entityType: "Refund", entityId: refundId, data: { status: r.status } });
+    revalidatePath(`/admin/orders/${r.orderId}`);
+    return r.status === "SUCCEEDED" ? { ok: true, message: "Refund succeeded." } : { ok: false, error: "Refund failed again. Check the Razorpay dashboard." };
+  });
+}
+
+export async function addOrderNoteAction(orderId: string, data: Record<string, unknown>): Promise<AdminResult> {
+  return guarded("orders.write", async (actorId) => {
+    const o = await db.order.findUniqueOrThrow({ where: { id: z.string().max(40).parse(orderId) }, select: { status: true } });
+    const note = z.string().trim().min(1).max(500).parse(data.note);
+    await db.orderEvent.create({ data: { orderId, status: o.status, message: note, isPublic: data.public === true, actorId } });
+    revalidatePath(`/admin/orders/${orderId}`);
+    return { ok: true, message: data.public === true ? "Update shared with the customer." : "Internal note added." };
+  });
+}
+
+// ── Coupons ──
+
+const couponSchema = z
+  .object({
+    id: z.string().max(40).optional(),
+    code: z.string().trim().toUpperCase().min(3).max(30).regex(/^[A-Z0-9_-]+$/, "Use letters, numbers, - and _ only"),
+    description: z.string().trim().max(200).optional(),
+    type: z.enum(["PERCENT", "FIXED", "FREE_SHIPPING", "BOGO"]),
+    value: z.coerce.number().min(0).max(1_000_000).default(0),
+    minSubtotal: z.coerce.number().min(0).max(10_000_000).default(0),
+    maxDiscount: z.union([z.literal(""), z.coerce.number().min(0).max(10_000_000)]).optional(),
+    usageLimit: z.union([z.literal(""), z.coerce.number().int().min(1)]).optional(),
+    perCustomerLimit: z.union([z.literal(""), z.coerce.number().int().min(1)]).optional(),
+    firstOrderOnly: z.boolean().default(false),
+    startsAt: z.union([z.literal(""), z.coerce.date()]).optional(),
+    endsAt: z.union([z.literal(""), z.coerce.date()]).optional(),
+    categoryIds: z.string().max(2000).optional(),
+    franchiseIds: z.string().max(2000).optional(),
+    isActive: z.boolean().default(true),
+  })
+  .superRefine((c, ctx) => {
+    if (c.type === "PERCENT" && (c.value <= 0 || c.value > 90)) ctx.addIssue({ code: "custom", path: ["value"], message: "Percent must be 1–90" });
+    if (c.type === "FIXED" && c.value <= 0) ctx.addIssue({ code: "custom", path: ["value"], message: "Enter the amount in ₹" });
+  });
+
+export async function saveCouponAction(raw: unknown): Promise<AdminResult> {
+  return guarded("marketing.write", async (actorId) => {
+    const c = couponSchema.parse(raw);
+    const rupees = (v: number) => Math.round(v * 100);
+    const ids = (s?: string) => (s ? s.split(",").map((x) => x.trim()).filter(Boolean) : []);
+    const data = {
+      code: c.code,
+      description: c.description || null,
+      type: c.type,
+      value: c.type === "FIXED" ? rupees(c.value) : c.type === "PERCENT" ? Math.round(c.value) : 0,
+      minSubtotal: rupees(c.minSubtotal),
+      maxDiscount: typeof c.maxDiscount === "number" ? rupees(c.maxDiscount) : null,
+      usageLimit: typeof c.usageLimit === "number" ? c.usageLimit : null,
+      perCustomerLimit: typeof c.perCustomerLimit === "number" ? c.perCustomerLimit : null,
+      firstOrderOnly: c.firstOrderOnly,
+      startsAt: c.startsAt instanceof Date ? c.startsAt : null,
+      endsAt: c.endsAt instanceof Date ? c.endsAt : null,
+      categoryIds: ids(c.categoryIds),
+      franchiseIds: ids(c.franchiseIds),
+      isActive: c.isActive,
+    };
+    const clash = await db.coupon.findFirst({ where: { code: c.code, ...(c.id ? { NOT: { id: c.id } } : {}) } });
+    if (clash) return { ok: false, error: `Code ${c.code} already exists.` };
+    const row = c.id ? await db.coupon.update({ where: { id: c.id }, data }) : await db.coupon.create({ data });
+    await audit({ actorId, action: c.id ? "coupon.update" : "coupon.create", entityType: "Coupon", entityId: row.id, data: { code: row.code } });
+    revalidatePath("/admin/coupons");
+    return { ok: true, message: `Coupon ${row.code} saved.` };
+  });
+}

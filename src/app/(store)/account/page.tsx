@@ -20,6 +20,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
     db.user.findUnique({ where: { id: user.id }, select: { passwordHash: true } }).then((u) => !!u?.passwordHash),
     db.recentlyViewed.count({ where: { userId: user.id } }),
   ]);
+  const orderCount = await db.order.count({ where: { userId: user.id, status: { not: "PENDING_PAYMENT" } } });
 
   return (
     <div className="container-page pb-16 pt-6">
@@ -49,7 +50,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
       <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Tile href="/wishlist" icon="heart" title="Wishlist" body={`${wishlistCount} saved item${wishlistCount === 1 ? "" : "s"}`} />
         <Tile href="/cart" icon="bag" title="Cart" body="Review saved items" />
-        <Tile icon="package" title="Orders" body="Order history arrives with checkout" />
+        <Tile href="/account/orders" icon="package" title="Orders" body={`${orderCount} order${orderCount === 1 ? "" : "s"}`} />
         <Tile href="#recent" icon="history" title="Recently viewed" body={`${recent} product${recent === 1 ? "" : "s"}`} />
       </div>
 

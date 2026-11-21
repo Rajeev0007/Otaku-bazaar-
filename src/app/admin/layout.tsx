@@ -10,11 +10,13 @@ export const dynamic = "force-dynamic";
 
 const NAV: { href: string; label: string; icon: Parameters<typeof Icon>[0]["name"]; permission: Permission }[] = [
   { href: "/admin", label: "Dashboard", icon: "chart", permission: "dashboard.view" },
+  { href: "/admin/orders", label: "Orders", icon: "bag", permission: "orders.read" },
   { href: "/admin/products", label: "Products", icon: "package", permission: "products.read" },
   { href: "/admin/inventory", label: "Inventory", icon: "box", permission: "inventory.read" },
   { href: "/admin/catalog", label: "Categories & anime", icon: "layers", permission: "catalog.write" },
   { href: "/admin/customers", label: "Customers", icon: "users", permission: "customers.read" },
   { href: "/admin/reviews", label: "Reviews & Q&A", icon: "star", permission: "reviews.moderate" },
+  { href: "/admin/coupons", label: "Coupons", icon: "tag", permission: "marketing.write" },
   { href: "/admin/newsletter", label: "Newsletter", icon: "mail", permission: "marketing.write" },
   { href: "/admin/homepage", label: "Homepage", icon: "home", permission: "content.write" },
   { href: "/admin/pages", label: "Pages & policies", icon: "edit", permission: "content.write" },

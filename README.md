@@ -107,8 +107,8 @@ The database schema already contains the tables for every later phase (orders, p
 | Phase | Scope | Status |
 |---|---|---|
 | 1–3 | Design system, storefront, catalog, search, filters, PDP, cart, wishlist, auth, admin products/inventory/content/RBAC | ✅ This PR |
-| 4 | Multi-step checkout, addresses, coupons engine, Razorpay (UPI/cards/netbanking/wallets/COD) + Stripe, webhooks, idempotency, inventory reservation, order creation | Next |
-| 5 | Shipping adapters (Shiprocket first), labels, tracking timeline, order management, invoices, returns/refunds | |
+| 4 | Checkout, addresses, coupon engine, Razorpay (UPI/cards/net banking/wallets) and COD, webhooks, idempotency, stock reservation, orders, tracking page, cancellations and refunds, invoices, admin orders and coupons | ✅ Done (Stripe/international later) |
+| 5 | Shiprocket integration (labels, automatic tracking updates), return requests and partial refunds | Next |
 | 6 | Customer order history, reviews from verified orders, support tickets + widget, notifications/templates, loyalty, gift cards | |
 | 7 | Analytics dashboards + consent-aware GA4/Meta Pixel, blog, multi-currency/markets, abandoned cart recovery | |
 | 8 | Security review, performance tuning, load tests, production hardening | |
