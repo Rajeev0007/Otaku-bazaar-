@@ -5,7 +5,7 @@ import { useState, useTransition } from "react";
 import type { CartView } from "@/server/cart/service";
 import { formatMoney } from "@/lib/money";
 import { Icon } from "@/components/ui/icon";
-import { ButtonLink } from "@/components/ui/button";
+import { Button, ButtonLink } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/misc";
 import { useToast } from "@/components/ui/toast";
 import { CartLine, FreeShippingProgress } from "@/components/store/cart-lines";
@@ -86,12 +86,13 @@ export function CartPageClient({ view }: { view: CartView }) {
                 <Icon name="alert" size={16} className="mt-0.5 shrink-0" /> Some items need attention before you can check out.
               </p>
             )}
-            <div className="mt-5 rounded-2xl border border-line bg-surface-2 p-4 text-sm" role="status">
-              <p className="flex items-center gap-2 font-semibold">
-                <Icon name="clock" size={16} /> Online checkout is coming next
-              </p>
-              <p className="mt-1 text-xs text-muted">Your cart is saved to your {view.id ? "account or this device" : "device"} and will be ready when secure checkout goes live.</p>
-            </div>
+            {view.hasIssues ? (
+              <Button size="lg" className="mt-5 w-full" disabled>Fix the items above to check out</Button>
+            ) : (
+              <ButtonLink href="/checkout" size="lg" className="mt-5 w-full">
+                Checkout <Icon name="arrow-right" size={16} />
+              </ButtonLink>
+            )}
             <div className="mt-4 flex items-center justify-center gap-4 text-xs text-subtle">
               <span className="flex items-center gap-1"><Icon name="shield" size={14} /> Secure payments</span>
               <span className="flex items-center gap-1"><Icon name="refresh" size={14} /> Easy returns</span>

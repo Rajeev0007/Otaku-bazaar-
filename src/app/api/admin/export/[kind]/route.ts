@@ -30,6 +30,17 @@ export async function GET(_req: Request, ctx: { params: Promise<{ kind: string }
       actorId = (await assertPermission("customers.read")).id;
       const users = await db.user.findMany({ where: { isStaff: false, status: { not: "DELETED" } }, orderBy: { createdAt: "asc" }, include: { _count: { select: { orders: true } } } });
       body = csv([["email", "name", "phone", "status", "verified", "marketing_opt_in", "orders", "tags", "joined"], ...users.map((u) => [u.email, u.name, u.phone, u.status, !!u.emailVerifiedAt, u.marketingOptIn, u._count.orders, u.tags.join(" "), u.createdAt])]);
+    } else if (kind === "orders") {
+      actorId = (await assertPermission("orders.read")).id;
+      const orders = await db.order.findMany({ orderBy: { createdAt: "asc" }, include: { items: true } });
+      body = csv([
+        ["number", "date", "status", "payment_method", "payment_status", "email", "phone", "name", "city", "state", "pin", "items", "subtotal", "discount", "coupon", "shipping", "cod_fee", "gift_wrap", "tax", "total"],
+        ...orders.map((o) => {
+          const a = o.shippingAddress as Record<string, string>;
+          const r = (n: number) => (n / 100).toFixed(2);
+          return [o.number, o.createdAt, o.status, o.paymentMethod, o.paymentStatus, o.email, o.phone, a.fullName, a.city, a.state, a.postalCode, o.items.map((i) => `${i.quantity}x ${i.sku}`).join(" | "), r(o.subtotal), r(o.discountTotal), o.couponCode, r(o.shippingTotal), r(o.codFeeTotal), r(o.giftWrapTotal), r(o.taxTotal), r(o.grandTotal)];
+        }),
+      ]);
     } else {
       return new Response("Not found", { status: 404 });
     }

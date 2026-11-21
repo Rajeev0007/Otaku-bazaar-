@@ -56,7 +56,7 @@ This is the biggest legal risk for an anime merch store.
 - [ ] Consider registering **"The Otaku Bazaar"** as a trademark (Class 25 apparel, Class 35 retail services). Search the IP India database first.
 - [ ] Keep supplier invoices and licence documents organised. Marketplaces and payment providers may ask for them.
 
-## 5. Payments (before Phase 4 goes live)
+## 5. Payments (before you accept real orders)
 
 - [ ] **Razorpay:** create an account, complete KYC (business PAN, GST, bank account, address proof), and add the live website URL with the policy pages.
 - [ ] Use **test mode** first. The store won't claim payments are live until real keys are configured.
@@ -64,9 +64,9 @@ This is the biggest legal risk for an anime merch store.
 - [ ] Decide on **cash on delivery** limits and whether to charge a COD fee (it must be shown before checkout).
 - [ ] For international sales: a **Stripe** account (India-based businesses need an export/international payments setup), and an understanding of the GST rules on exports (LUT filing).
 
-## 6. Shipping (Phase 5)
+## 6. Shipping
 
-- [ ] Choose a courier aggregator (**Shiprocket** is planned first) and complete its KYC.
+- [ ] Choose a courier aggregator (**Shiprocket** is built in) and complete its KYC. Book one real test shipment before launch.
 - [ ] Confirm real rates and delivery times, then update the shipping zones (the PIN code checker uses them) and the Shipping Policy.
 - [ ] Decide how you'll handle packaging, COD remittance cycles and returns.
 
@@ -77,6 +77,9 @@ This is the biggest legal risk for an anime merch store.
 - [ ] Keep a simple record of which service providers hold customer data (Vercel, Neon, Resend, the payment gateway, couriers).
 - [ ] Have a breach response plan (see [SECURITY.md](../SECURITY.md)).
 - [ ] Decide retention periods and write them in the Privacy Policy.
+- [ ] Customers can download their data and delete their account from My account. Mention this in the Privacy Policy, along with how long order and support records are kept after deletion.
+- [ ] If you add Google Analytics or Meta Pixel, list them in the Cookie Policy. The store asks for consent before loading them.
+- [ ] Gift cards and reward points: write their terms (validity, no cash refund, what happens on returns) in the Terms & Conditions before you sell or issue them.
 
 ## 8. Before you switch DNS to the new store
 

@@ -10,7 +10,8 @@ import { useShopper } from "@/components/store/shopper-context";
 export function MobileTabBar() {
   const pathname = usePathname();
   const { cartCount, setCartOpen, user } = useShopper();
-  if (pathname.startsWith("/p/")) return null;
+  // Product and checkout pages have their own sticky action bar.
+  if (pathname.startsWith("/p/") || pathname.startsWith("/checkout")) return null;
   const items: { href: string; label: string; icon: IconName; match: (p: string) => boolean }[] = [
     { href: "/", label: "Home", icon: "home", match: (p) => p === "/" },
     { href: "/shop", label: "Shop", icon: "grid", match: (p) => p.startsWith("/shop") || p.startsWith("/c/") || p.startsWith("/anime") || p.startsWith("/search") },

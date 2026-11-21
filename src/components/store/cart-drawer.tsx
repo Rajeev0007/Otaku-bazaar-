@@ -123,9 +123,10 @@ export function CartDrawer() {
                 </div>
               )}
               <p className="text-xs text-muted">{view.taxInclusive ? `Prices include ${view.taxLabel}.` : "Taxes calculated at checkout."} Shipping calculated at checkout.</p>
-              <ButtonLink href="/cart" size="lg" className="w-full">
-                View cart & checkout
+              <ButtonLink href={view.hasIssues ? "/cart" : "/checkout"} size="lg" className="w-full">
+                {view.hasIssues ? "Review cart" : "Checkout"}
               </ButtonLink>
+              <ButtonLink href="/cart" variant="outline" className="w-full">View cart</ButtonLink>
             </div>
           </>
         )}

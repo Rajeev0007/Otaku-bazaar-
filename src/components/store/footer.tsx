@@ -34,7 +34,7 @@ export async function Footer() {
         </div>
         <FooterCol title="Shop" links={[["/shop", "All products"], ...nav.categories.slice(0, 6).map((c) => [`/c/${c.slug}`, c.name] as [string, string]), ["/shop?sale=1", "Sale"]]} />
         <FooterCol title="Anime" links={[...nav.franchises.slice(0, 7).map((f) => [`/anime/${f.slug}`, f.name] as [string, string]), ["/anime", "All series"]]} />
-        <FooterCol title="Help" links={[["/pages/contact", "Contact us"], ["/pages/shipping-policy", "Shipping"], ["/pages/returns-policy", "Returns & refunds"], ["/pages/cancellation-policy", "Cancellations"], ["/pages/payment-policy", "Payments"], ["/pages/grievance-redressal", "Grievance redressal"], ["/account", "My account"]]} />
+        <FooterCol title="Help" links={[["/support", "Help & support"], ["/pages/contact", "Contact us"], ["/track", "Track your order"], ["/pages/shipping-policy", "Shipping"], ["/pages/returns-policy", "Returns & refunds"], ["/pages/cancellation-policy", "Cancellations"], ["/pages/payment-policy", "Payments"], ["/pages/grievance-redressal", "Grievance redressal"], ["/account", "My account"]]} />
         <FooterCol title="Company" links={[["/pages/about", "About us"], ["/pages/privacy-policy", "Privacy policy"], ["/pages/terms", "Terms & conditions"], ["/pages/cookie-policy", "Cookie policy"], ["/pages/disclaimer", "Disclaimer"], ["/pages/intellectual-property", "IP policy"]]} />
       </div>
       {(s.business.legalName || s.grievanceOfficer.name) && (

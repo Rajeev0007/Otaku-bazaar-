@@ -12,7 +12,8 @@ const optionalText = (max: number) => z.string().trim().max(max).optional().tran
 
 export const variantInput = z.object({
   id: z.string().max(40).optional(),
-  sku: z.string().trim().min(2).max(64).regex(/^[A-Za-z0-9._-]+$/, "SKU may contain letters, numbers, dot, dash and underscore"),
+  // Leave empty to generate one automatically.
+  sku: z.union([z.literal(""), z.string().trim().min(2).max(64).regex(/^[A-Za-z0-9._-]+$/, "SKU may contain letters, numbers, dot, dash and underscore")]).default(""),
   title: z.string().trim().max(80).optional(),
   size: optionalText(20),
   color: optionalText(40),
@@ -32,7 +33,7 @@ export const productInput = z
     name: z.string().trim().min(2).max(160),
     slug: z.string().trim().max(100).optional(),
     subtitle: optionalText(200),
-    description: z.string().trim().min(10, "Write at least a short description").max(20_000),
+    description: z.string().trim().max(20_000).default(""),
     kind: z.nativeEnum(ProductKind).default("STANDARD"),
     status: z.nativeEnum(ProductStatus).default("DRAFT"),
     categoryId: z.string().min(1, "Choose a category").max(40),
@@ -58,7 +59,7 @@ export const productInput = z
     variants: z.array(variantInput).min(1, "Add at least one variant").max(100),
   })
   .superRefine((p, ctx) => {
-    const skus = p.variants.map((v) => v.sku.toUpperCase());
+    const skus = p.variants.map((v) => v.sku.toUpperCase()).filter(Boolean);
     if (new Set(skus).size !== skus.length) ctx.addIssue({ code: "custom", path: ["variants"], message: "Each variant needs a unique SKU." });
     p.variants.forEach((v, i) => {
       if (v.compareAtPrice !== null && v.compareAtPrice <= v.price) ctx.addIssue({ code: "custom", path: ["variants", i, "compareAtPrice"], message: "Compare-at price must be higher than the price." });
@@ -92,9 +93,32 @@ async function uniqueSlug(base: string, excludeId?: string) {
   throw new AdminError("Could not generate a unique URL slug.");
 }
 
+/** Fills empty SKUs with readable unique codes, e.g. OB-NARUTO-HOODIE-BLK-M-7K2. */
+async function fillSkus(input: z.infer<typeof productInput>, slug: string, productId?: string) {
+  const base = `OB-${slug.toUpperCase().replace(/[^A-Z0-9]+/g, "-").split("-").filter(Boolean).slice(0, 3).join("-")}`.slice(0, 30);
+  const taken = new Set(input.variants.map((v) => v.sku.toUpperCase()).filter(Boolean));
+  const suffix = () => Array.from({ length: 3 }, () => "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[Math.floor(Math.random() * 32)]).join("");
+  for (const v of input.variants) {
+    if (v.sku) continue;
+    const attrs = [v.color?.slice(0, 3), v.size, v.style?.replace(/\s+/g, "").slice(0, 8)].filter(Boolean).join("-").toUpperCase().replace(/[^A-Z0-9-]/g, "");
+    for (let i = 0; i < 20; i++) {
+      const cand = [base, attrs, suffix()].filter(Boolean).join("-");
+      if (taken.has(cand)) continue;
+      const clash = await db.productVariant.findFirst({ where: { sku: { equals: cand, mode: "insensitive" }, ...(productId ? { NOT: { productId } } : {}) }, select: { id: true } });
+      if (!clash) {
+        v.sku = cand;
+        taken.add(cand);
+        break;
+      }
+    }
+    if (!v.sku) throw new AdminError("Could not generate a SKU. Enter one manually.");
+  }
+}
+
 export async function saveProduct(raw: unknown, actorId: string, productId?: string) {
   const input = productInput.parse(raw);
   const slug = await uniqueSlug(input.slug || input.name, productId);
+  await fillSkus(input, slug, productId);
   const skuClash = await db.productVariant.findFirst({
     where: { sku: { in: input.variants.map((v) => v.sku), mode: "insensitive" }, ...(productId ? { NOT: { productId } } : {}) },
     select: { sku: true },
@@ -168,6 +192,12 @@ export async function saveProduct(raw: unknown, actorId: string, productId?: str
           create: { variantId: current.id, onHand: 0, lowStockThreshold: v.lowStockThreshold, allowBackorder: v.allowBackorder },
           update: { lowStockThreshold: v.lowStockThreshold, allowBackorder: v.allowBackorder },
         });
+        // Stock edited directly in the product form: record the difference in the stock ledger.
+        if (v.stock !== undefined && current.inventory && v.stock !== current.inventory.onHand) {
+          if (v.stock < current.inventory.reserved) throw new AdminError(`${fields.title}: ${current.inventory.reserved} unit(s) are held by unpaid orders, so stock can't go below that.`);
+          const inv = await tx.inventoryItem.update({ where: { variantId: current.id }, data: { onHand: v.stock } });
+          await tx.inventoryTransaction.create({ data: { inventoryId: inv.id, delta: v.stock - current.inventory.onHand, onHandAfter: v.stock, reason: InventoryReason.CORRECTION, actorId, note: "Updated in product editor" } });
+        }
       } else {
         const created = await tx.productVariant.create({ data: { ...fields, productId: product.id } });
         keepIds.add(created.id);
@@ -217,4 +247,35 @@ export async function setProductStatus(productIds: string[], status: ProductStat
     await tx.product.updateMany({ where: { id: { in: ids } }, data: { status, ...(status === "ACTIVE" ? { publishedAt: new Date() } : {}) } });
     await audit({ actorId, action: "product.bulk_status", entityType: "Product", data: { ids, status } }, tx);
   });
+}
+
+/** Copies a product (as a draft, with stock 0 and new SKUs) so similar items are quick to add. */
+export async function duplicateProduct(productId: string, actorId: string) {
+  const p = await db.product.findUnique({ where: { id: productId }, include: { images: { where: { isCustomerPhoto: false }, orderBy: { position: "asc" } }, variants: { where: { isActive: true }, orderBy: { position: "asc" }, include: { inventory: true } } } });
+  if (!p) throw new AdminError("Product not found.");
+  const r = (n: number | null) => (n === null ? "" : String(n / 100));
+  return saveProduct(
+    {
+      name: `${p.name} (copy)`,
+      subtitle: p.subtitle ?? undefined,
+      description: p.description,
+      kind: p.kind,
+      status: "DRAFT",
+      categoryId: p.categoryId,
+      franchiseId: p.franchiseId ?? undefined,
+      brandId: p.brandId ?? undefined,
+      tags: p.tags.filter((t) => t !== "demo"),
+      material: p.material ?? undefined,
+      careInstructions: p.careInstructions ?? undefined,
+      dimensions: p.dimensions ?? undefined,
+      weightGrams: p.weightGrams,
+      warranty: p.warranty ?? undefined,
+      authenticity: p.authenticity ?? undefined,
+      returnable: p.returnable,
+      returnWindowDays: p.returnWindowDays ?? "",
+      images: p.images.map((i) => ({ url: i.url, alt: i.alt })),
+      variants: p.variants.map((v) => ({ sku: "", size: v.size ?? "", color: v.color ?? "", colorHex: v.colorHex ?? "", style: v.style ?? "", price: r(v.price), compareAtPrice: r(v.compareAtPrice), costPrice: r(v.costPrice), stock: 0, lowStockThreshold: v.inventory?.lowStockThreshold ?? 5, allowBackorder: v.inventory?.allowBackorder ?? false })),
+    },
+    actorId,
+  );
 }

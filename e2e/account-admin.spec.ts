@@ -80,24 +80,64 @@ test("product manager creates a product that appears in the store", async ({ pag
   await login(page, "products@otakubazaar.test", "/admin");
   await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
   await page.screenshot(shot("admin-dashboard"));
+
+  // Simple product: name, category, price, stock. SKU generated automatically.
   await page.goto("/admin/products/new");
   const name = `E2E Kitsune Mask ${Date.now()}`;
-  await page.getByLabel("Name", { exact: true }).fill(name);
-  await page.getByLabel("Description", { exact: true }).fill("A handcrafted kitsune cosplay mask made for e2e tests.");
+  await page.getByLabel("Product name").fill(name);
   await page.getByLabel("Category", { exact: true }).selectOption({ label: "Cosplay" });
-  await page.getByLabel("Status", { exact: true }).selectOption("ACTIVE");
-  const row = page.locator("tbody tr").first();
-  await row.locator("input").nth(0).fill(`E2E-${Date.now()}`);
-  await row.locator('input[type="number"]').nth(0).fill("899");
-  await page.getByLabel("Initial stock").fill("7");
-  await page.getByRole("button", { name: "Create product" }).click();
+  await page.getByLabel("Price (₹)").fill("899");
+  await page.getByLabel("Stock", { exact: true }).fill("7");
+  await page.screenshot({ path: "test-results/screens/admin-product-simple.png", fullPage: true });
+  await page.getByRole("button", { name: "Publish product" }).click();
   await expect(page.getByText("Product created.")).toBeVisible();
   await expect(page).toHaveURL(/\/admin\/products\/[a-z0-9]+$/);
-  await page.screenshot(shot("admin-product-edit"));
-
   await page.goto(`/search?q=${encodeURIComponent("kitsune mask")}`);
   await expect(page.getByRole("link", { name }).first()).toBeVisible();
 
-  await page.goto("/admin/inventory?q=E2E-");
-  await expect(page.getByRole("cell", { name: "7" }).first()).toBeVisible();
+  // Product with sizes and colours
+  await page.goto("/admin/products/new");
+  const tee = `E2E Option Tee ${Date.now()}`;
+  await page.getByLabel("Product name").fill(tee);
+  await page.getByLabel("Category", { exact: true }).selectOption({ label: "Clothing › Oversized T-Shirts" });
+  await page.getByLabel("Price (₹)").fill("999");
+  await page.getByLabel("MRP / was (₹)").fill("1299");
+  await page.getByRole("button", { name: /Sizes \/ colours/ }).click();
+  for (const sz of ["M", "L"]) await page.getByRole("button", { name: sz, exact: true }).click();
+  await page.getByRole("button", { name: "Black" }).click();
+  await page.getByRole("button", { name: "White", exact: true }).click();
+  await expect(page.getByText("4 options")).toBeVisible();
+  await page.getByLabel("Stock for all options").fill("5");
+  await page.getByRole("button", { name: "Apply" }).click();
+  await page.screenshot({ path: "test-results/screens/admin-product-options.png", fullPage: true });
+  await page.getByRole("button", { name: "Publish product" }).click();
+  await expect(page.getByText("Product created.")).toBeVisible();
+  await expect(page).toHaveURL(/\/admin\/products\/[a-z0-9]{20,}$/);
+  await page.reload();
+  await expect(page.getByText("4 options · 20 in stock")).toBeVisible();
+  // Edit stock directly: recorded in the stock history
+  await page.getByLabel("Stock for White M").fill("9");
+  await page.getByRole("button", { name: "Save changes" }).click();
+  await expect(page.getByText("Product saved.")).toBeVisible();
+  await page.goto(`/search?q=${encodeURIComponent(tee)}`);
+  await page.getByRole("link", { name: tee }).first().click();
+  await expect(page.getByText("23% off").first()).toBeVisible();
+});
+
+test("admin works on a phone @mobile", async ({ page }, info) => {
+  test.skip(info.project.name !== "mobile");
+  await login(page, "products@otakubazaar.test", "/admin/products");
+  await expect(page.getByRole("button", { name: "Open admin menu" })).toBeVisible();
+  await page.screenshot(shot("admin-mobile-products"));
+  await page.getByRole("button", { name: "Open admin menu" }).click();
+  await page.getByRole("link", { name: "Inventory" }).click();
+  await expect(page).toHaveURL(/\/admin\/inventory/);
+  await page.goto("/admin/products/new");
+  await page.getByLabel("Product name").fill(`Phone-made Poster ${Date.now()}`);
+  await page.getByLabel("Category", { exact: true }).selectOption({ label: "Posters & Wall Art" });
+  await page.getByLabel("Price (₹)").fill("399");
+  await page.getByLabel("Stock", { exact: true }).fill("3");
+  await page.screenshot({ path: "test-results/screens/admin-mobile-new.png", fullPage: true });
+  await page.getByRole("button", { name: "Publish product" }).click();
+  await expect(page.getByText("Product created.")).toBeVisible();
 });

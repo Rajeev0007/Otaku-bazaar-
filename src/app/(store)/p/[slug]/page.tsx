@@ -11,6 +11,7 @@ import { Badge, Breadcrumbs, Rating } from "@/components/ui/misc";
 import { Icon } from "@/components/ui/icon";
 import { ProductGallery } from "@/components/store/product-gallery";
 import { PurchasePanel, type PanelVariant } from "@/components/store/purchase-panel";
+import { TrackOnMount } from "@/components/store/analytics";
 import { ProductRail } from "@/components/store/product-rail";
 import { ProductCard } from "@/components/store/product-card";
 import { RecentlyViewed, RecordView } from "@/components/store/recently-viewed";
@@ -143,6 +144,7 @@ export default async function ProductPage({ params, searchParams }: Props) {
             )}
 
             <div className="mt-6">
+              <TrackOnMount name="product_view" data={{ productId: product.id }} />
               <PurchasePanel
                 productId={product.id}
                 productName={product.name}

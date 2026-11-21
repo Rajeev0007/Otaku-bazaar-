@@ -1,6 +1,8 @@
 import { Header } from "@/components/store/header";
 import { Footer } from "@/components/store/footer";
 import { MobileTabBar } from "@/components/store/mobile-tab-bar";
+import { HelpWidget } from "@/components/store/help-widget";
+import { ConsentAndAnalytics } from "@/components/store/analytics";
 import { ShopperProvider } from "@/components/store/shopper-context";
 import { getShopperSummary } from "@/server/shopper";
 import { getStoreSettings } from "@/server/settings";
@@ -39,6 +41,8 @@ export default async function StoreLayout({ children }: { children: React.ReactN
       </main>
       <Footer />
       <MobileTabBar />
+      <HelpWidget whatsapp={settings.support.whatsapp || settings.social.whatsapp || ""} />
+      <ConsentAndAnalytics ga4Id={settings.analytics.ga4Id} metaPixelId={settings.analytics.metaPixelId} />
     </ShopperProvider>
   );
 }

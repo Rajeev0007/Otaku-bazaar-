@@ -34,6 +34,17 @@ export function SettingsForm({ initial }: { initial: StoreSettings }) {
     standardShipping: rupees(initial.standardShipping),
     giftWrapPrice: rupees(initial.giftWrapPrice),
     maxQtyPerLine: String(initial.maxQtyPerLine),
+    loyaltyEnabled: initial.loyalty.enabled,
+    pointsPer100: String(initial.loyalty.pointsPer100),
+    pointValue: rupees(initial.loyalty.pointValue),
+    minRedeem: String(initial.loyalty.minRedeem),
+    maxRedeemPercent: String(initial.loyalty.maxRedeemPercent),
+    signupBonus: String(initial.loyalty.signupBonus),
+    ga4Id: initial.analytics.ga4Id,
+    metaPixelId: initial.analytics.metaPixelId,
+    codEnabled: initial.cod.enabled,
+    codMax: rupees(initial.cod.maxOrder),
+    codFee: rupees(initial.cod.fee),
     taxInclusive: initial.taxInclusive,
     taxRate: String(initial.taxRateBps / 100),
     taxLabel: initial.taxLabel,
@@ -80,6 +91,9 @@ export function SettingsForm({ initial }: { initial: StoreSettings }) {
         standardShipping: paise(s.standardShipping),
         giftWrapPrice: paise(s.giftWrapPrice),
         maxQtyPerLine: Number(s.maxQtyPerLine),
+        loyalty: { enabled: s.loyaltyEnabled, pointsPer100: Number(s.pointsPer100) || 0, pointValue: paise(s.pointValue) || 1, minRedeem: Number(s.minRedeem) || 0, maxRedeemPercent: Number(s.maxRedeemPercent) || 0, signupBonus: Number(s.signupBonus) || 0 },
+        analytics: { ga4Id: s.ga4Id.trim(), metaPixelId: s.metaPixelId.trim() },
+        cod: { enabled: s.codEnabled, maxOrder: paise(s.codMax), fee: paise(s.codFee) },
         taxInclusive: s.taxInclusive,
         taxRateBps: Math.round(Number(s.taxRate) * 100),
         taxLabel: s.taxLabel,
@@ -121,6 +135,32 @@ export function SettingsForm({ initial }: { initial: StoreSettings }) {
           <Field label="Max quantity per item" htmlFor="mq"><Input id="mq" type="number" value={s.maxQtyPerLine} onChange={set("maxQtyPerLine")} /></Field>
         </div>
         <p className="text-xs text-muted">Per-zone delivery rates (standard / express / next-day) are stored in shipping zones and used by the PIN code checker.</p>
+      </section>
+      <section className={box}>
+        <h2 className="font-semibold">Reward points</h2>
+        <Checkbox label="Customers earn points on delivered orders" checked={s.loyaltyEnabled} onChange={set("loyaltyEnabled")} />
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Points per ₹100 spent" htmlFor="pp"><Input id="pp" type="number" value={s.pointsPer100} onChange={set("pointsPer100")} /></Field>
+          <Field label="1 point is worth (₹)" htmlFor="pv"><Input id="pv" type="number" step="0.01" value={s.pointValue} onChange={set("pointValue")} /></Field>
+          <Field label="Min points to redeem" htmlFor="mr"><Input id="mr" type="number" value={s.minRedeem} onChange={set("minRedeem")} /></Field>
+          <Field label="Max % of order paid with points" htmlFor="mp"><Input id="mp" type="number" value={s.maxRedeemPercent} onChange={set("maxRedeemPercent")} /></Field>
+          <Field label="Sign-up bonus points" htmlFor="sb"><Input id="sb" type="number" value={s.signupBonus} onChange={set("signupBonus")} /></Field>
+        </div>
+        <p className="text-xs text-muted">Example: 2 points per ₹100 and ₹1 per point = 2% back.</p>
+      </section>
+      <section className={box}>
+        <h2 className="font-semibold">Analytics & ads (optional)</h2>
+        <p className="text-xs text-muted">Loaded only after the visitor accepts cookies. Store analytics in Admin → Analytics works without these.</p>
+        <Field label="Google Analytics 4 measurement ID" htmlFor="ga4"><Input id="ga4" value={s.ga4Id} onChange={set("ga4Id")} placeholder="G-XXXXXXXXXX" /></Field>
+        <Field label="Meta (Facebook/Instagram) Pixel ID" htmlFor="mpx"><Input id="mpx" value={s.metaPixelId} onChange={set("metaPixelId")} placeholder="123456789012345" /></Field>
+      </section>
+      <section className={box}>
+        <h2 className="font-semibold">Cash on delivery</h2>
+        <Checkbox label="Offer cash on delivery" checked={s.codEnabled} onChange={set("codEnabled")} />
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Max order value (₹)" htmlFor="codMax" hint="0 = no limit"><Input id="codMax" type="number" value={s.codMax} onChange={set("codMax")} /></Field>
+          <Field label="COD fee (₹)" htmlFor="codFee" hint="Shown before the customer pays"><Input id="codFee" type="number" value={s.codFee} onChange={set("codFee")} /></Field>
+        </div>
       </section>
       <section className={box}>
         <h2 className="font-semibold">Tax display</h2>

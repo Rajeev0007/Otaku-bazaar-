@@ -7,6 +7,10 @@ import { Icon, type IconName } from "@/components/ui/icon";
 import { ChangePasswordForm, LogoutButton, ProfileForm, ResendVerification, SignOutOthers } from "@/components/account/account-forms";
 import { FormSuccess } from "@/components/ui/field";
 import { RecentlyViewed } from "@/components/store/recently-viewed";
+import { DeleteAccount, GiftCardBalance, PrivacyLinks } from "@/components/account/account-extras";
+import { pointsBalance } from "@/server/rewards/service";
+import { getStoreSettings } from "@/server/settings";
+import { formatMoney } from "@/lib/money";
 
 export const metadata: Metadata = { title: "My account", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -20,6 +24,8 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
     db.user.findUnique({ where: { id: user.id }, select: { passwordHash: true } }).then((u) => !!u?.passwordHash),
     db.recentlyViewed.count({ where: { userId: user.id } }),
   ]);
+  const [points, pointHistory, settings] = await Promise.all([pointsBalance(user.id), db.loyaltyTransaction.findMany({ where: { userId: user.id }, orderBy: { createdAt: "desc" }, take: 10 }), getStoreSettings()]);
+  const orderCount = await db.order.count({ where: { userId: user.id, status: { not: "PENDING_PAYMENT" } } });
 
   return (
     <div className="container-page pb-16 pt-6">
@@ -49,8 +55,8 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
       <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Tile href="/wishlist" icon="heart" title="Wishlist" body={`${wishlistCount} saved item${wishlistCount === 1 ? "" : "s"}`} />
         <Tile href="/cart" icon="bag" title="Cart" body="Review saved items" />
-        <Tile icon="package" title="Orders" body="Order history arrives with checkout" />
-        <Tile href="#recent" icon="history" title="Recently viewed" body={`${recent} product${recent === 1 ? "" : "s"}`} />
+        <Tile href="/account/orders" icon="package" title="Orders" body={`${orderCount} order${orderCount === 1 ? "" : "s"}`} />
+        <Tile href="/account/support" icon="mail" title="Help & support" body="Your messages with us" />
       </div>
 
       <div className="mt-10 grid gap-6 lg:grid-cols-2">
@@ -63,6 +69,28 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
           <h2 className="text-lg font-semibold">{hasPassword ? "Change password" : "Set a password"}</h2>
           <p className="mb-5 mt-1 text-sm text-muted">{hasPassword ? "Changing your password signs out your other devices." : "You sign in with Google. Use “Forgot password” on the sign-in page to add a password."}</p>
           {hasPassword ? <ChangePasswordForm /> : <Link href="/forgot-password" className="text-sm font-semibold text-accent hover:underline">Set a password by email</Link>}
+        </section>
+        {settings.loyalty.enabled && (
+          <section className="rounded-[var(--radius-card)] border border-line bg-surface p-6">
+            <h2 className="text-lg font-semibold">Reward points</h2>
+            <p className="mt-1 text-3xl font-semibold">{points} <span className="text-sm font-normal text-muted">points · worth {formatMoney(points * settings.loyalty.pointValue, "INR")}</span></p>
+            <p className="mt-1 text-xs text-muted">Earn {settings.loyalty.pointsPer100} points per ₹100 on delivered orders. Use them at checkout (from {settings.loyalty.minRedeem} points, up to {settings.loyalty.maxRedeemPercent}% of an order).</p>
+            {pointHistory.length > 0 && (
+              <ul className="mt-4 divide-y divide-line text-sm">
+                {pointHistory.map((p) => (
+                  <li key={p.id} className="flex justify-between py-2">
+                    <span className="text-muted">{({ PURCHASE: "Order delivered", REDEEM: "Used on order", REDEEM_REFUND: "Returned (order cancelled)", SIGNUP_BONUS: "Welcome bonus", ADJUSTMENT: "Adjustment" } as Record<string, string>)[p.reason] ?? p.reason} · {p.createdAt.toLocaleDateString("en-IN")}</span>
+                    <span className={p.points > 0 ? "font-medium text-success" : "font-medium"}>{p.points > 0 ? "+" : ""}{p.points}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        )}
+        <section className="rounded-[var(--radius-card)] border border-line bg-surface p-6">
+          <h2 className="text-lg font-semibold">Gift card balance</h2>
+          <p className="mb-4 mt-1 text-sm text-muted">Check how much is left on a gift card. Use it at checkout.</p>
+          <GiftCardBalance />
         </section>
         <section className="rounded-[var(--radius-card)] border border-line bg-surface p-6 lg:col-span-2">
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -84,6 +112,14 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
           </ul>
         </section>
       </div>
+      <section className="mt-6 rounded-[var(--radius-card)] border border-line bg-surface p-6">
+        <h2 className="text-lg font-semibold">Your data & privacy</h2>
+        <p className="mb-4 mt-1 text-sm text-muted">Download a copy of everything we hold about you, or delete your account. See our <a href="/pages/privacy-policy" className="underline">Privacy Policy</a>.</p>
+        <div className="flex flex-wrap items-center gap-4">
+          <PrivacyLinks />
+          <DeleteAccount hasPassword={hasPassword} />
+        </div>
+      </section>
       <div id="recent" className="-mx-4 scroll-mt-24 sm:-mx-6 xl:-mx-10">
         <RecentlyViewed title="Recently viewed" />
       </div>

@@ -1,4 +1,5 @@
 import { db } from "@/server/db";
+import { getStoreSettings } from "@/server/settings";
 
 export type DeliveryOption = { code: string; name: string; cost: number; currency: string; minDate: string; maxDate: string; free: boolean };
 export type DeliveryEstimate = { ok: true; options: DeliveryOption[]; cod: boolean } | { ok: false; error: string };
@@ -36,7 +37,10 @@ export async function estimateDelivery(input: { country: string; postalCode: str
   if (!zone || !zone.rates.length) return { ok: false, error: "Delivery isn't available to this location yet." };
 
   const now = input.now ?? new Date();
-  const options = zone.rates.map((r) => {
+  const settings = await getStoreSettings();
+  const options = zone.rates.map((raw) => {
+    // Standard delivery price and free-shipping threshold are edited in Admin → Store settings.
+    const r = raw.code === "standard" ? { ...raw, baseRate: settings.standardShipping, freeOver: settings.freeShippingThreshold > 0 ? settings.freeShippingThreshold : null } : raw;
     const free = r.freeOver !== null && input.subtotal >= r.freeOver;
     return {
       code: r.code,

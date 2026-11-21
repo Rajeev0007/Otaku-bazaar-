@@ -734,7 +734,10 @@ model Order {
   giftCardTotal    Int           @default(0)
   loyaltyTotal     Int           @default(0)
   giftWrapTotal    Int           @default(0)
+  codFeeTotal      Int           @default(0)
   grandTotal       Int
+  paymentMethod    String? // razorpay | cod
+  cartId           String?
   taxInclusive     Boolean       @default(true)
   couponCode       String?
   shippingMethod   String?

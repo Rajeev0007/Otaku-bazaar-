@@ -41,7 +41,9 @@ The dashboard shows a **Launch setup** checklist. Each item links to the right s
 
 | Admin page | What you set |
 |---|---|
-| **Integrations** | Email (Resend API key and sender address), Google sign-in, image storage status |
+| **Integrations** | **Payments (Razorpay keys + webhook)**, email (Resend), Google sign-in, image storage status |
+| **Orders** | Fulfil, mark shipped with tracking number, delivered, cancel and refund; invoices, packing slips, CSV export |
+| **Coupons** | % off, ₹ off, free shipping, buy-1-get-1, with limits, dates and category/anime rules |
 | **Store settings** | Store name, logo, announcement bar, owner, support email/phone/WhatsApp, **social links**, business details, grievance officer, shipping and tax display, maintenance mode, demo catalog on/off |
 | **Pages & policies** | Terms, Privacy, Shipping, Returns, Cancellation, Payment, Grievance, Cookies, Disclaimer, IP, About, Contact |
 | **Homepage** | Banners and the order of homepage sections |
@@ -49,6 +51,34 @@ The dashboard shows a **Launch setup** checklist. Each item links to the right s
 | **Products / Inventory** | Your catalog, photos, variants and stock |
 | **Customers, Reviews & Q&A, Newsletter** | Day-to-day operations, CSV exports |
 | **Staff & roles** | Give team members access with limited permissions |
+
+## Take payments
+
+1. Cash on delivery works immediately (Store settings → Cash on delivery sets the limit and fee).
+2. For UPI, cards, net banking and wallets: **Admin → Integrations → Payments**. Paste your Razorpay **test** Key ID and secret, add the webhook URL shown there in Razorpay with a secret, and save. Place a test order.
+3. When Razorpay activates your account, replace them with **live** keys. The checkout shows "TEST MODE" until you do.
+
+## Add a product (works on your phone)
+
+Admin → Products → **Add product**:
+1. **Photos:** tap *Add photos* (camera or gallery). Large photos are shrunk automatically.
+2. **Basics:** name, category, anime, description.
+3. **Price & stock:** price, optional MRP (shows % off), stock. For T-shirts or phone cases choose **Sizes / colours**, tap the sizes and colours, then set the stock for each option (or "Set all").
+4. Press **Publish product**. SKU codes are created for you. *More details* (material, tags, SEO…) is optional.
+
+Use **Duplicate** on an existing product to add similar items quickly.
+
+## Ship orders and handle returns
+
+- **Shiprocket (optional):** Admin → Integrations → Shipping. Paste your Shiprocket API user and pickup location name, and add the webhook URL and token shown there in Shiprocket. Each order then gets a **Book courier & ship** button that books the courier, prints the label and keeps tracking updated automatically. Without Shiprocket, type the courier and tracking number on the order page.
+- **Returns:** customers request returns, exchanges or replacements from their order page after delivery (within each product's return window). Handle them in Admin → **Returns**: approve → item received (restock) → refund or send the exchange. Prepaid orders are refunded through Razorpay; for cash-on-delivery orders you send the money by UPI/bank and record it.
+
+## Customer care, rewards and analytics
+
+- **Help page:** customers write to you from `/support` (also the round help button on every page). Messages arrive in Admin → **Support tickets**; your reply is emailed to them. Add common questions in Admin → **FAQs**.
+- **Gift cards:** Admin → **Gift cards** → issue a card. The code is shown once; if you enter the recipient's email it is sent to them.
+- **Reward points:** on by default (2 points per ₹100, 1 point = ₹1, use up to 20% of an order). Change or switch off in Store settings → Reward points.
+- **Analytics:** Admin → **Analytics** works without any setup. To also use Google Analytics or Meta Pixel, paste the GA4 measurement ID (`G-…`) and/or Pixel ID in Store settings → Analytics & ads. They only load for visitors who accept the cookie banner, which appears once an ID is set.
 
 ## Optional
 
